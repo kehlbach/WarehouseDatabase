@@ -4,9 +4,8 @@ from django.shortcuts import render
 from django.contrib.auth.models import User, Group
 from rest_framework import viewsets
 from rest_framework import permissions
-from config.home.serializers import UserSerializer, GroupSerializer
 from .models import Category, Item
-from .serializers import CategorySerializer, ItemSerializer
+from .serializers import UserSerializer, GroupSerializer, CategorySerializer, ItemSerializer
 
 class UserViewSet(viewsets.ModelViewSet):
     """
