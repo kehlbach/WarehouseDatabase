@@ -37,13 +37,13 @@ ALLOWED_HOSTS = ['valentinkelbakh.pythonanywhere.com']
 # Application definition
 
 INSTALLED_APPS = [
-    'home.apps.HomeConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'home.apps.HomeConfig',
     'rest_framework',
 ]
 
