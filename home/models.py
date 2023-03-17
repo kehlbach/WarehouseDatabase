@@ -9,7 +9,7 @@ class Category(models.Model):
 
 class Item(models.Model):
     vendor_code = models.TextField(unique=True)
-    category = models.ForeignKey(Item_Category, on_delete=models.CASCADE)
+    category = models.ForeignKey(Category, on_delete=models.CASCADE)
     name = models.TextField(unique=True)
     units = models.TextField(default='шт')
     def __str__(self):
