@@ -1,24 +1,49 @@
-from django.contrib.auth.models import User, Group
+# from django.contrib.auth.models import User, Group
 from rest_framework import serializers
-from .models import Category, Item
+from .models import *
+
+# class UserSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = User
+#         fields = ['id','url', 'username', 'email', 'groups']
 
 
-class UserSerializer(serializers.HyperlinkedModelSerializer):
+# class GroupSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = Group
+#         fields = ['id','url', 'name']
+
+class DepartmentSerializer(serializers.ModelSerializer):
     class Meta:
-        model = User
-        fields = ['url', 'username', 'email', 'groups']
+        model = Department
+        fields = '__all__'
 
 
-class GroupSerializer(serializers.HyperlinkedModelSerializer):
+class PermissionSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Group
-        fields = ['url', 'name']
+        model = Permission
+        fields = '__all__'
 
-class CategorySerializer(serializers.Serializer):
+
+class RoleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Role
+        fields = '__all__'
+
+
+class ProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Profile
+        fields = '__all__'
+
+
+class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
         fields = '__all__'
-class ItemSerializer(serializers.Serializer):
+
+
+class ProductSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Item
+        model = Product
         fields = '__all__'

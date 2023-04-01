@@ -25,12 +25,15 @@ urlpatterns = [
 from django.urls import include, path
 from rest_framework import routers
 from home import views
-
 router = routers.DefaultRouter()
-router.register(r'users', views.UserViewSet)
-router.register(r'groups', views.GroupViewSet)
+# router.register(r'users', views.UserViewSet)
+# router.register(r'groups', views.GroupViewSet)
+router.register(r'departments', views.DepartmentViewSet)
+router.register(r'permissions', views.PermissionViewSet)
+router.register(r'roles', views.RoleViewSet)
+router.register(r'profiles', views.ProfileViewSet)
 router.register(r'categories', views.CategoryViewSet)
-router.register(r'items', views.ItemViewSet)
+router.register(r'products', views.ProductViewSet)
 
 
 # Wire up our API using automatic URL routing.
