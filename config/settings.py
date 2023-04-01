@@ -100,8 +100,11 @@ DATABASES = {
         'USER': env('DB_USERNAME'),
         'PASSWORD': env('DB_PASSWORD'),
         'HOST': env('DB_HOST'),
+        'PORT': env('DB_PORT'),
         "OPTIONS": {
             "init_command": "SET innodb_strict_mode=1",
+            'charset': 'utf8mb4',
+            'use_unicode': True,
         },
     }
 }
