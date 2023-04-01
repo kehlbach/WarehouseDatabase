@@ -3,3 +3,6 @@
 /db.sqlite3
 .env
 __pycache__/
+.envpa
+migrations/
+sql.txt
