@@ -1,0 +1,15 @@
+[
+    {
+      "model": "home.Role",
+      "fields": {
+        "name": "administrator"
+      }
+    },
+    {
+      "model": "home.Role",
+      "fields": {
+        "name": "blank",
+        "perms":[]
+      }
+    }
+  ]
