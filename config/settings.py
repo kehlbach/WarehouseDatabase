@@ -11,36 +11,33 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 """
 
 from pathlib import Path
-import os, environ
-
-
-
-
+import os
+import environ
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-#test
+# test
 env = environ.Env(
     # set casting, default value
     DEBUG=(bool, False)
 )
-environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
-
+# environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv('SECRET_KEY')
+SECRET_KEY = env('SECRET_KEY')  # os.getenv('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv('DEBUG')
+DEBUG = env('DEBUG')  # os.getenv('DEBUG')
 
-ALLOWED_HOSTS = ['valentinkelbakh.pythonanywhere.com','localhost','127.0.0.1']
+ALLOWED_HOSTS = ['valentinkelbakh.pythonanywhere.com',
+                 'localhost', '127.0.0.1']
 
 
 # Application definition
@@ -55,7 +52,6 @@ INSTALLED_APPS = [
     'home.apps.HomeConfig',
     'rest_framework',
     'django_filters',
-
 ]
 
 MIDDLEWARE = [
@@ -108,7 +104,6 @@ DATABASES = {
         },
     }
 }
-
 
 
 # Password validation
