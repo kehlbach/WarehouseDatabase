@@ -81,6 +81,16 @@ class ProfileSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class ReceiptSerializer(serializers.ModelSerializer):
+    repr = serializers.SerializerMethodField()
+    type = serializers.SerializerMethodField()
+
+    def get_repr(self, obj):
+        return obj.repr
+
+    def get_type(self, obj):
+        return obj.type
+
     class Meta:
         model = Receipt
         fields = '__all__'
