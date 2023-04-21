@@ -61,7 +61,8 @@ class Permission(models.Model):
 
 class Role(models.Model):
     name = models.CharField(max_length=32, unique=True)
-    perms = models.ManyToManyField(Permission, blank=True)
+    permissions = models.ManyToManyField(Permission, blank=True)
+    is_protected = models.BooleanField(default=False)
 
     def __str__(self):
         return f'{self.name.capitalize()}'
