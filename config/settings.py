@@ -87,16 +87,19 @@ WSGI_APPLICATION = 'config.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': env('DB_NAME'),
-        'USER': env('DB_USERNAME'),
-        'PASSWORD': env('DB_PASSWORD'),
-        'HOST': env('DB_HOST'),
-        'PORT': env('DB_PORT'),
-        "OPTIONS": {
-            "init_command": "SET innodb_strict_mode=1",
-            'charset': 'utf8mb4',
-            'use_unicode': True,
+        'OPTIONS': {
+            'read_default_file': os.path.join(BASE_DIR, 'db1.cnf'),
         },
+        # 'NAME': env('DB1_NAME'),
+        # 'USER': env('DB1_USERNAME'),
+        # 'PASSWORD': env('DB1_PASSWORD'),
+        #'HOST': env('DB_HOST'),
+        #'PORT': env('DB_PORT')
+        # "OPTIONS": {
+        #     "init_command": "SET innodb_strict_mode=1",
+        #     'charset': 'utf8mb4',
+        #     'use_unicode': True,
+        # },
     }
 }
 
