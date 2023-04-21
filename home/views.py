@@ -5,20 +5,21 @@ from rest_framework.generics import RetrieveDestroyAPIView
 from rest_framework import viewsets
 from rest_framework import permissions
 from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework.response import Response
 from rest_framework import status
 from .models import *
 from .models import Profile
 from .serializers import *
 
 class DepartmentViewSet(viewsets.ModelViewSet):
-    queryset = Department.objects.all()
+    queryset = Department.objects.all().order_by('id')
     serializer_class = DepartmentSerializer
     permission_classes = [permissions.IsAuthenticated]
     filterset_fields = ['name']
 
-
 class PermissionViewSet(viewsets.ModelViewSet):
-    queryset = Permission.objects.all()
+    queryset = Permission.objects.all().order_by('id')
     serializer_class = PermissionSerializer
     permission_classes = [permissions.IsAuthenticated]
     filterset_fields = ['action', 'subject']

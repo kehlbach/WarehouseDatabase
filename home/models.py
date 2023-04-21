@@ -1,18 +1,16 @@
-import re
-from django.db import models
 from django.core.validators import RegexValidator
-from django.db.models import Q
+from django.db import models
 
-
-#class db_field(models.Model)
 
 class Department(models.Model):
     name = models.CharField(max_length=32, unique=True)
     # charfield and textfield not require null=True
     location = models.CharField(max_length=128, blank=True)
+    is_hidden = models.BooleanField(default=False)
 
     def __str__(self):
         return f'{self.name.capitalize()}'
+
     @property
     def repr(self):
         return self.__str__()
@@ -23,7 +21,6 @@ class Permission(models.Model):
     ADD = 11
     EDIT = 12
     DELETE = 13
-
     Actions = (
         (VIEW, 'смотреть',),
         (ADD, 'добавлять',),
@@ -34,35 +31,32 @@ class Permission(models.Model):
     PROFILES = 20
     ROLES = 21
     INVENTORY = 22
-    RECEIPTS =23
+    RECEIPTS = 23
     PRODUCTS = 24
     CATEGORIES = 25
     DEPARTMENTS = 26
-    
-    Subjects= (
+    Subjects = (
         (PROFILES, 'Пользователи'),
         (ROLES, 'Роли'),
         (INVENTORY, 'Остатки'),
-        (RECEIPTS,'Накладные'),
+        (RECEIPTS, 'Накладные'),
         (PRODUCTS, 'Номенклатура'),
         (CATEGORIES, 'Категории'),
         (DEPARTMENTS, 'Отделения')
     )
 
     action = models.IntegerField(choices=Actions)
-    subject = models.IntegerField(choices=Subjects,blank=True,null=True)
+    subject = models.IntegerField(choices=Subjects, blank=True, null=True)
 
     class Meta:
         unique_together = ('action', 'subject')
 
     def __str__(self):
-        return f'{self.get_action_display()} {self.get_subject_display()}'
+        return f'{self.get_action_display()} {self.get_subject_display()}' # type: ignore
+
     @property
     def repr(self):
         return self.__str__()
-
-    
-
 
 
 class Role(models.Model):
@@ -71,28 +65,33 @@ class Role(models.Model):
 
     def __str__(self):
         return f'{self.name.capitalize()}'
+
     @property
     def repr(self):
         return self.__str__()
 
 
-
-
 class Profile(models.Model):
+    pattern = r'\+?\d?[ -]?\(?\d{3}\)?[ -\.]?\d{3}[ -\.]?\d{2}[ -]?\d{2}'
     phone_regex = RegexValidator(
-        regex=r'^\+?\d{9,16}$', message="Phone number must be entered in the format: '+999999999'. Up to 15 digits allowed.")
+        regex=pattern, message="Phone number is not identified.")
+    name = models.CharField(max_length=64, blank=True)
     phone_number = models.CharField(
         validators=[phone_regex], max_length=17, unique=True)
-    role = models.ForeignKey(Role, on_delete=models.CASCADE)
+    user_id = models.CharField(
+        max_length=32, unique=True, null=True, blank=True)
+    role = models.ForeignKey(Role, on_delete=models.PROTECT)
     departments = models.ManyToManyField(Department, blank=True)
+    is_hidden = models.BooleanField(default=False)
 
     def __str__(self):
-        
+
         return f'{self.name}: {self.role}'
+
     @property
     def repr(self):
         if self.name:
-            group = self.name.split()#re.split(NAME_PATTERN,self.name)
+            group = self.name.split()
             name = group.pop(0)
             if group:
                 for each in group:
@@ -104,8 +103,10 @@ class Profile(models.Model):
 
 class Category(models.Model):
     name = models.CharField(max_length=128, unique=True)
+
     def __str__(self):
         return f'{self.name}'
+
     @property
     def repr(self):
         return self.__str__()
@@ -116,8 +117,10 @@ class Product(models.Model):
     name = models.CharField(max_length=128, unique=True)
     units = models.CharField(max_length=32, default='шт')
     category = models.ForeignKey(Category, on_delete=models.PROTECT)
+
     def __str__(self):
         return f'{self.vendor_code}: {self.name}'
+
     @property
     def repr(self):
         return self.__str__()
@@ -125,17 +128,20 @@ class Product(models.Model):
 
 class Receipt(models.Model):
     date = models.DateField()
-    from_department = models.ForeignKey(Department, on_delete=models.PROTECT, blank=True, null=True, related_name='from_department')
-    to_department = models.ForeignKey(Department, on_delete=models.PROTECT, blank=True, null=True, related_name='to_department')
+    from_department = models.ForeignKey(
+        Department, on_delete=models.PROTECT, blank=True, null=True, related_name='from_department')
+    to_department = models.ForeignKey(
+        Department, on_delete=models.PROTECT, blank=True, null=True, related_name='to_department')
     made_by = models.ForeignKey(Profile, on_delete=models.PROTECT)
-    #provider = models.CharField(max_length=128, blank=True)
-    #customer = models.CharField(max_length=128, blank=True)
     note = models.CharField(max_length=256, blank=True)
+
     def __str__(self):
-        return '{}: {} {}'.format(self.id, self.type, self.date)
+        return '{}: {} {}'.format(self.id, self.type, self.date) # type: ignore
+
     @property
     def repr(self):
         return self.__str__()
+
     @property
     def type(self):
         if self.from_department and self.to_department:
@@ -145,16 +151,17 @@ class Receipt(models.Model):
         else:
             return 'Приходная'
 
-    
 
 class ReceiptProduct(models.Model):
-    #Удаление Receipt рассматривается как отмена операции по накладной
-    receipt = models.ForeignKey(Receipt,on_delete=models.CASCADE)
+    # Удаление Receipt рассматривается как отмена операции по накладной
+    receipt = models.ForeignKey(Receipt, on_delete=models.CASCADE)
     product = models.ForeignKey(Product, on_delete=models.PROTECT)
-    price = models.DecimalField(max_digits=10, decimal_places=2, default = 0)
+    price = models.DecimalField(max_digits=10, decimal_places=2, default=0) # type: ignore
     quantity = models.IntegerField()
+
     class Meta:
-        unique_together = ('receipt', 'product','price')
+        unique_together = ('receipt', 'product', 'price')
+
 
 class Inventory(models.Model):
     JAN = 1
@@ -169,7 +176,7 @@ class Inventory(models.Model):
     OCT = 10
     NOV = 11
     DEC = 12
-    Months= (
+    Months = (
         (JAN, 'Январь'),
         (FEB, 'Февраль'),
         (MAR, 'Март'),
@@ -187,22 +194,25 @@ class Inventory(models.Model):
     year = models.IntegerField()
     month = models.IntegerField(choices=Months)
     product = models.ForeignKey(Product, on_delete=models.PROTECT)
-    goods_received = models.IntegerField(default = 0)
-    goods_issued = models.IntegerField(default = 0)
+    goods_received = models.IntegerField(default=0)
+    goods_issued = models.IntegerField(default=0)
+
     class Meta:
-        unique_together = ('department', 'year','month','product')
+        unique_together = ('department', 'year', 'month', 'product')
+
     @property
     def month_start(self):
-        previous_months = Inventory.objects.filter(department=self.department, year=self.year,
-                                                       month__lt=self.month, product=self.product).order_by('-year', '-month').first()
-        
+        previous_months = Inventory.objects.filter(department=self.department,
+                                                   year=self.year,
+                                                   month__lt=self.month,
+                                                   product=self.product).order_by('-year', '-month').first()
         if previous_months:
             return previous_months.month_start + previous_months.goods_received - previous_months.goods_issued
         else:
-            previous_years = Inventory.objects.filter(department=self.department, year__lt=self.year,
-                                                       product=self.product).order_by('-year', '-month').first()
+            previous_years = Inventory.objects.filter(department=self.department,
+                                                      year__lt=self.year,
+                                                      product=self.product).order_by('-year', '-month').first()
             if previous_years:
                 return previous_years.month_start + previous_years.goods_received - previous_years.goods_issued
             else:
                 return 0
-
