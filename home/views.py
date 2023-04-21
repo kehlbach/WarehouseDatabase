@@ -47,6 +47,11 @@ class RoleViewSet(viewsets.ModelViewSet):
     serializer_class = RoleSerializer
     permission_classes = [permissions.IsAuthenticated]
     filterset_fields = ['name']
+    # def get_serializer_class(self):
+    #     if self.request.method == 'GET':
+    #         return RoleGetSerializer
+    #     else:
+    #         return RoleSerializer
 
 
 class ProfileViewSet(viewsets.ModelViewSet):
@@ -55,6 +60,11 @@ class ProfileViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
     filterset_fields = ['phone_number']
 
+    # def get_serializer_class(self):
+    #     if self.request.method in ['GET']:
+    #         return ProfileGetSerializer
+    #     else:
+    #         return ProfileSerializer
 
 class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
@@ -85,3 +95,24 @@ class ProductViewSet(viewsets.ModelViewSet):
     #     self.perform_destroy(instance)
     #     return Response(status=status.HTTP_204_NO_CONTENT)
 
+    # def get_serializer_class(self):
+    #     if self.request.method == 'GET':
+    #         return ProductGetSerializer
+    #     else:
+    #         return ProductSerializer
+    # def get_serializer_class(self):
+    #     if self.request.method == 'GET':
+    #         return ReceiptGetSerializer
+    #     else:
+    #         return ReceiptSerializer
+    # def get_serializer_class(self):
+    #     match self.request.method:
+    #         case 'GET':
+    #             return ReceiptProductGetSerializer
+    #         case _:
+    #             return ReceiptProductSerializer            
+    # def get_serializer_class(self):
+    #     if self.request.method == 'GET':
+    #         return InventoryGetSerializer
+    #     else:
+    #         return InventorySerializer
