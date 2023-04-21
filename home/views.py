@@ -34,26 +34,27 @@ class SubjectsView(APIView):
         return Response(dict(Permission.Subjects))
 
 class RoleViewSet(viewsets.ModelViewSet):
-    queryset = Role.objects.all()
+    queryset = Role.objects.all().order_by('id')
     serializer_class = RoleSerializer
     permission_classes = [permissions.IsAuthenticated]
     filterset_fields = ['name']
 
 class ProfileViewSet(viewsets.ModelViewSet):
-    queryset = Profile.objects.all()
+    queryset = Profile.objects.all().order_by('id')
     serializer_class = ProfileSerializer
     permission_classes = [permissions.IsAuthenticated]
-    filterset_fields = ['phone_number']
+    filterset_fields = ['phone_number', 'role','user_id']
+        
 
 class CategoryViewSet(viewsets.ModelViewSet):
-    queryset = Category.objects.all()
+    queryset = Category.objects.all().order_by('id')
     serializer_class = CategorySerializer
     permission_classes = [permissions.IsAuthenticated]
     filterset_fields = ['name']
 
 
 class ProductViewSet(viewsets.ModelViewSet):
-    queryset = Profile.objects.all()
+    queryset = Product.objects.all().order_by('id')
     serializer_class = ProductSerializer
     permission_classes = [permissions.IsAuthenticated]
     filterset_fields = ['vendor_code', 'name', 'category']
