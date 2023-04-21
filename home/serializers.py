@@ -57,7 +57,15 @@ class ProfileSerializer(serializers.ModelSerializer):
         return obj.role.repr
 
 
+class CategorySerializer(serializers.ModelSerializer):
+    repr = serializers.SerializerMethodField()
 
+    def get_repr(self, obj):
+        return obj.repr
+
+    class Meta:
+        model = Category
+        fields = '__all__'
 
 
 
