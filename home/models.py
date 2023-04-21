@@ -3,14 +3,6 @@ from django.db import models
 from django.core.validators import RegexValidator
 from django.db.models import Q
 
-# Create your models here.
-
-#Probably gonna add to print receipts
-# class Organization(models.Model):
-#     name = models.CharField("First name", max_length=255, blank = True, null = True)
-#     code = models.CharField("First name", max_length=255, unique=True)
-#     phone_regex = RegexValidator(regex=r'^\+?\d{9,16}$', message="Phone number must be entered in the format: '+999999999'. Up to 15 digits allowed.")
-#     phone_number = models.CharField(validators=[phone_regex], max_length=17, blank=True)
 
 #class db_field(models.Model)
 
@@ -84,16 +76,6 @@ class Role(models.Model):
         return self.__str__()
 
 
-# class Role(models.Model):
-#     name = models.CharField(max_length=32, unique=True)
-#     permissions = models.ManyToManyField(Permission, blank=True)
-#     is_protected = models.BooleanField(default=False)
-
-#     def __str__(self):
-#         return f'{self.name.capitalize()}'
-#     @property
-#     def repr(self):
-#         return self.__str__()
 
 
 class Profile(models.Model):
@@ -109,7 +91,6 @@ class Profile(models.Model):
         return f'{self.name}: {self.role}'
     @property
     def repr(self):
-        #NAME_PATTERN = r'([А-Я]?[а-я]+)+'
         if self.name:
             group = self.name.split()#re.split(NAME_PATTERN,self.name)
             name = group.pop(0)
@@ -143,17 +124,7 @@ class Product(models.Model):
 
 
 class Receipt(models.Model):
-    # RECEIVED = 1
-    # ISSUED = 2
-    # MOVED = 3
-    # Types = (
-    #     (RECEIVED,'Приходная'),
-    #     (ISSUED,'Расходная'),
-    #     (MOVED,'Перемещение')
-    # )
-
     date = models.DateField()
-    # type = models.IntegerField(choices=Types)
     from_department = models.ForeignKey(Department, on_delete=models.PROTECT, blank=True, null=True, related_name='from_department')
     to_department = models.ForeignKey(Department, on_delete=models.PROTECT, blank=True, null=True, related_name='to_department')
     made_by = models.ForeignKey(Profile, on_delete=models.PROTECT)
@@ -215,33 +186,11 @@ class Inventory(models.Model):
     department = models.ForeignKey(Department, on_delete=models.PROTECT)
     year = models.IntegerField()
     month = models.IntegerField(choices=Months)
-    #day = models.IntegerField()
     product = models.ForeignKey(Product, on_delete=models.PROTECT)
-    #month_start = models.IntegerField(default = 0)
     goods_received = models.IntegerField(default = 0)
     goods_issued = models.IntegerField(default = 0)
     class Meta:
         unique_together = ('department', 'year','month','product')
-    # def save(self, *args, **kwargs):
-    #     previous_months = Inventory.objects.filter(department=self.department, year=self.year,
-    #                                                    month__lt=self.month, product=self.product).order_by('-year', '-month').first()
-    #     previous_years = Inventory.objects.filter(department=self.department, year__lt=self.year,
-    #                                                    product=self.product).order_by('-year', '-month').first()
-    #     if previous_months:
-    #         self.month_start = previous_months.month_start + self.goods_received - self.goods_issued
-    #     elif previous_years:
-    #         self.month_start = previous_years.month_start + self.goods_received - self.goods_issued
-    #     else:
-    #         self.month_start = 0
-    #     super(Inventory, self).save(*args, **kwargs)
-    #     higher_months = Q(department=self.department, product=self.product,
-    #                                                  year=self.year, month__gt = self.month)
-    #     higher_years = Q(department=self.department, product=self.product,
-    #                                 year__gt=self.year)
-    #     comb = higher_months|higher_years
-    #     higher_all = Inventory.objects.filter(comb).order_by('year', 'month')
-    #     higher_all = higher_all.order_by('year', 'month')
-    #     Inventory.objects.bulk_update(higher_all,['month_start'])
     @property
     def month_start(self):
         previous_months = Inventory.objects.filter(department=self.department, year=self.year,
@@ -257,61 +206,3 @@ class Inventory(models.Model):
             else:
                 return 0
 
-# class InventoryOnDate:
-#     def __init__(self, department, date):
-#         self.department = department
-#         #self.product = product#
-#         self.date = date
-#         inventory = Inventory.objects.filter(
-#                     department = self.department, 
-#                     #product=self.product,
-#                     )
-#         if inventory.filter(year=self.date.year).exists():
-#             if inventory.filter(year=self.date.year, month = self.date.month):
-#                 inventory = inventory.filter(year=self.date.year, month = self.date.month).first()
-#                 receipts = Receipt.filter(
-#                     date__year = inventory.year,
-#                     date__month = inventory.month,
-#                     date__day__lte = inventory.day)
-#             else:
-#                 inventory = inventory.filter(
-#                     year=self.date.year, 
-#                     month__lt = self.date.month).order_by('-year', '-month').first()
-#                 receipts = Receipt.filter(
-#                     date__year = inventory.year,
-#                     date__month = inventory.month)
-#         else:
-#             inventory = inventory.filter(year__lt=self.date.year).order_by('-year', '-month').first()
-#             receipts = Receipt.filter(
-#                     date__year = inventory.year,
-#                     date__month = inventory.month)
-        
-
-#     # define computed properties
-#     @property
-#     def foobar(self):
-        
-
-#         pass
-
-# class Profile(models.Model):
-#     id = models.BigAutoField(primary_key=True)
-#     full_name = models.CharField(max_length=255, blank=True, null=True)
-#     login = models.CharField(max_length=255, unique=True)
-#     # role = models.ForeignKey(Role, on_delete=models.CASCADE)
-#     password = models.CharField(max_length=255)
-
-
-# class ProfileRole(models.Model):
-#     id = models.BigAutoField(primary_key=True)
-#     profile = models.ForeignKey(Profile, on_delete=models.CASCADE)
-#     roles = models.ManyToManyField(Role)
-#     # Access to all departments
-#     full_access = models.BooleanField(default=False)
-#     departments = models.ManyToManyField(Department)
-
-
-# class Chat(models.Model):
-#     id = models.BigAutoField(primary_key=True)
-#     chat_id = models.IntegerField(unique=True)
-#     profile = models.ForeignKey(Profile, on_delete=models.CASCADE)
