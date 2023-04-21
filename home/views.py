@@ -87,3 +87,9 @@ class ReceiptProductViewSet(viewsets.ModelViewSet):
         rp.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+class InventoryViewSet(viewsets.ModelViewSet):
+    queryset = Inventory.objects.all().order_by('-year', '-month')
+    serializer_class = InventorySerializer
+    serializer_class = InventorySerializer
+    permission_classes = [permissions.IsAuthenticated]
+
