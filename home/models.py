@@ -1,5 +1,8 @@
+import re
 from django.db import models
 from django.core.validators import RegexValidator
+from django.db.models import Q
+
 # Create your models here.
 
 # class Organization(models.Model):
@@ -15,7 +18,10 @@ class Department(models.Model):
     location = models.CharField(max_length=128, blank=True)
 
     def __str__(self):
-        return f'{self.id}: {self.name.capitalize()}'
+        return f'{self.name.capitalize()}'
+    @property
+    def repr(self):
+        return self.__str__()
 
 
 class Permission(models.Model):
@@ -56,7 +62,13 @@ class Permission(models.Model):
         unique_together = ('action', 'subject')
 
     def __str__(self):
-        return f'{self.id}: {self.action} {self.subject.capitalize()}'
+        return f'{self.get_action_display()} {self.get_subject_display()}'
+    @property
+    def repr(self):
+        return self.__str__()
+
+    
+
 
 
 class Role(models.Model):
@@ -64,7 +76,11 @@ class Role(models.Model):
     perms = models.ManyToManyField(Permission, blank=True)
 
     def __str__(self):
-        return f'{self.id}: {self.name.capitalize()}'
+        return f'{self.name.capitalize()}'
+    @property
+    def repr(self):
+        return self.__str__()
+
 
 
 class Profile(models.Model):
@@ -76,11 +92,29 @@ class Profile(models.Model):
     departments = models.ManyToManyField(Department, blank=True)
 
     def __str__(self):
-        return f'{self.id}: {self.phone_number}'
+        
+        return f'{self.name}: {self.role}'
+    @property
+    def repr(self):
+        #NAME_PATTERN = r'([А-Я]?[а-я]+)+'
+        if self.name:
+            group = self.name.split()#re.split(NAME_PATTERN,self.name)
+            name = group.pop(0)
+            if group:
+                for each in group:
+                    name += ' {}.'.format(each[0])
+            return name
+        else:
+            return self.phone_number
 
 
 class Category(models.Model):
     name = models.CharField(max_length=128, unique=True)
+    def __str__(self):
+        return f'{self.name}'
+    @property
+    def repr(self):
+        return self.__str__()
 
 
 class Product(models.Model):
@@ -88,6 +122,10 @@ class Product(models.Model):
     name = models.CharField(max_length=128, unique=True)
     units = models.CharField(max_length=32, unique=True)
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
+    @property
+    def repr(self):
+        return self.__str__()
+
 
 
 # class Profile(models.Model):
