@@ -126,6 +126,14 @@ class Product(models.Model):
     def repr(self):
         return self.__str__()
 
+class ReceiptProduct(models.Model):
+    #Удаление Receipt рассматривается как отмена операции по накладной
+    receipt = models.ForeignKey(Receipt,on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, on_delete=models.PROTECT)
+    price = models.DecimalField(max_digits=10, decimal_places=2, default = 0)
+    quantity = models.IntegerField()
+    class Meta:
+        unique_together = ('receipt', 'product','price')
 
 
 # class Profile(models.Model):
