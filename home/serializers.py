@@ -148,3 +148,12 @@ class ReceiptProductSerializer(serializers.ModelSerializer):
         return rp
 
 
+class InventorySerializer(serializers.ModelSerializer):
+    month_start = serializers.SerializerMethodField()
+
+    def get_month_start(self, obj):
+        return obj.month_start
+
+    class Meta:
+        model = Inventory
+        fields = '__all__'
