@@ -74,9 +74,7 @@ class ProductSerializer(serializers.ModelSerializer):
     def get_repr(self, obj):
         return obj.repr
 
-class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Profile
         model = Product
         fields = '__all__'
 
@@ -96,10 +94,8 @@ class ReceiptSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class ProductSerializer(serializers.ModelSerializer):
 class ReceiptProductSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Product
         model = ReceiptProduct
         fields = '__all__'
 
