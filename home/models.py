@@ -10,7 +10,6 @@ from django.core.validators import RegexValidator
 
 
 class Department(models.Model):
-    id = models.BigAutoField(primary_key=True)
     name = models.CharField(max_length=32, unique=True)
     # charfield and textfield not require null=True
     location = models.CharField(max_length=128, blank=True)
@@ -61,7 +60,6 @@ class Permission(models.Model):
 
 
 class Role(models.Model):
-    id = models.BigAutoField(primary_key=True)
     name = models.CharField(max_length=32, unique=True)
     perms = models.ManyToManyField(Permission, blank=True)
 
@@ -70,7 +68,6 @@ class Role(models.Model):
 
 
 class Profile(models.Model):
-    id = models.BigAutoField(primary_key=True)
     phone_regex = RegexValidator(
         regex=r'^\+?\d{9,16}$', message="Phone number must be entered in the format: '+999999999'. Up to 15 digits allowed.")
     phone_number = models.CharField(
@@ -83,7 +80,6 @@ class Profile(models.Model):
 
 
 class Category(models.Model):
-    id = models.BigAutoField(primary_key=True)
     name = models.CharField(max_length=128, unique=True)
 
 
