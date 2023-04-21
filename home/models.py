@@ -120,8 +120,15 @@ class Category(models.Model):
 class Product(models.Model):
     vendor_code = models.CharField(max_length=32, unique=True)
     name = models.CharField(max_length=128, unique=True)
-    units = models.CharField(max_length=32, unique=True)
-    category = models.ForeignKey(Category, on_delete=models.CASCADE)
+    units = models.CharField(max_length=32, default='шт')
+    category = models.ForeignKey(Category, on_delete=models.PROTECT)
+    def __str__(self):
+        return f'{self.vendor_code}: {self.name}'
+    @property
+    def repr(self):
+        return self.__str__()
+
+
 class Receipt(models.Model):
     date = models.DateField()
     # type = models.IntegerField(choices=Types)
