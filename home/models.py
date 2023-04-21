@@ -122,9 +122,30 @@ class Product(models.Model):
     name = models.CharField(max_length=128, unique=True)
     units = models.CharField(max_length=32, unique=True)
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
+class Receipt(models.Model):
+    date = models.DateField()
+    # type = models.IntegerField(choices=Types)
+    from_department = models.ForeignKey(Department, on_delete=models.PROTECT, blank=True, null=True, related_name='from_department')
+    to_department = models.ForeignKey(Department, on_delete=models.PROTECT, blank=True, null=True, related_name='to_department')
+    made_by = models.ForeignKey(Profile, on_delete=models.PROTECT)
+    #provider = models.CharField(max_length=128, blank=True)
+    #customer = models.CharField(max_length=128, blank=True)
+    note = models.CharField(max_length=256, blank=True)
+    def __str__(self):
+        return '{}: {} {}'.format(self.id, self.type, self.date)
     @property
     def repr(self):
         return self.__str__()
+    @property
+    def type(self):
+        if self.from_department and self.to_department:
+            return 'Перемещение'
+        elif self.from_department:
+            return 'Расходная'
+        else:
+            return 'Приходная'
+
+    
 
 class ReceiptProduct(models.Model):
     #Удаление Receipt рассматривается как отмена операции по накладной
