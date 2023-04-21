@@ -38,10 +38,23 @@ class RoleSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class ProfileSerializer(serializers.ModelSerializer):
+    repr = serializers.SerializerMethodField()
 
+    def get_repr(self, obj):
+        return obj.repr
+    permissions = serializers.SerializerMethodField()
+    role_name = serializers.SerializerMethodField()
 
+    class Meta:
+        model = Profile
+        fields = '__all__'
 
+    def get_permissions(self, obj):
+        return ' '.join(str(i.id) for i in Role.objects.get(id=obj.role.id).permissions.get_queryset())
 
+    def get_role_name(self, obj):
+        return obj.role.repr
 
 
 
