@@ -64,4 +64,26 @@ class ReceiptViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
     filterset_fields = ['date', 'from_department', 'to_department', 'made_by']
 
+class ReceiptProductViewSet(viewsets.ModelViewSet):
+    queryset = ReceiptProduct.objects.all().order_by('id')
+    serializer_class = ReceiptProductSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    filterset_fields = ['receipt', 'product']    
+    def destroy(self,request, pk=None):
+        rp = self.get_object()
+        try:
+            inventory = Inventory.objects.get(
+            department=rp.receipt.from_department,
+            year=rp.receipt.date.year,
+            month=rp.receipt.date.month,
+            product=rp.product,)
+            if rp.receipt.from_department:        
+                inventory.goods_received = F('goods_issued') - rp.quantity
+            if rp.receipt.to_department:        
+                inventory.goods_issued = F('goods_issued') - rp.quantity
+            inventory.save()
+        except Exception as e:
+            print(e)
+        rp.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
