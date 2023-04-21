@@ -97,8 +97,54 @@ class ReceiptSerializer(serializers.ModelSerializer):
 
 
 class ProductSerializer(serializers.ModelSerializer):
+class ReceiptProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
+        model = ReceiptProduct
         fields = '__all__'
 
-    #     return instance
+    def create(self, validated_data):
+        rp = ReceiptProduct.objects.create(**validated_data)
+        if rp.receipt.from_department:
+            inventory, created = Inventory.objects.get_or_create(
+                department=rp.receipt.from_department,
+                year=rp.receipt.date.year,
+                month=rp.receipt.date.month,
+                product=rp.product,)
+            issued = rp.quantity
+            exists = inventory.month_start
+            receipts = Receipt.objects.filter(
+                to_department=rp.receipt.from_department,
+                date__year=rp.receipt.date.year,
+                date__month=rp.receipt.date.month,
+                date__day__lte=rp.receipt.date.day)
+            for each in receipts:
+                obj = ReceiptProduct.objects.filter(
+                    receipt=each,
+                    product=rp.product).first()
+                if obj:
+                    exists += obj.quantity
+            if issued > exists:
+                rp.delete()
+                raise ValidationError('Not enough {} on department {}'.format(
+                    rp.product.repr,
+                    rp.receipt.from_department.repr))
+            if created:
+                inventory.goods_issued = rp.quantity
+            else:  # existed
+                inventory.goods_issued = F('goods_issued') + rp.quantity
+            inventory.save()
+        if rp.receipt.to_department:
+            inventory, created = Inventory.objects.get_or_create(
+                department=rp.receipt.to_department,
+                year=rp.receipt.date.year,
+                month=rp.receipt.date.month,
+                product=rp.product,)
+            if created:
+                inventory.goods_received = rp.quantity
+            else:  # existed
+                inventory.goods_received = F('goods_received') + rp.quantity
+            inventory.save()
+        return rp
+
+
