@@ -20,9 +20,41 @@ class Department(models.Model):
 
 
 class Permission(models.Model):
-    id = models.BigAutoField(primary_key=True)
-    action = models.CharField(max_length=32)  # add, change
-    subject = models.CharField(max_length=32, blank=True)
+    VIEW = 10
+    ADD = 11
+    EDIT = 12
+    DELETE = 13
+
+    Actions = (
+        (VIEW, 'смотреть',),
+        (ADD, 'добавлять',),
+        (EDIT, 'изменять',),
+        (DELETE, 'удалять')
+    )
+
+    PROFILES = 20
+    ROLES = 21
+    INVENTORY = 22
+    RECEIPTS =23
+    PRODUCTS = 24
+    CATEGORIES = 25
+    DEPARTMENTS = 26
+    
+    Subjects= (
+        (PROFILES, 'Пользователи'),
+        (ROLES, 'Роли'),
+        (INVENTORY, 'Остатки'),
+        (RECEIPTS,'Накладные'),
+        (PRODUCTS, 'Номенклатура'),
+        (CATEGORIES, 'Категории'),
+        (DEPARTMENTS, 'Отделения')
+    )
+
+    action = models.IntegerField(choices=Actions)
+    subject = models.IntegerField(choices=Subjects,blank=True,null=True)
+
+    class Meta:
+        unique_together = ('action', 'subject')
 
     def __str__(self):
         return f'{self.id}: {self.action} {self.subject.capitalize()}'
