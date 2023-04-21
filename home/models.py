@@ -135,6 +135,58 @@ class ReceiptProduct(models.Model):
     class Meta:
         unique_together = ('receipt', 'product','price')
 
+class Inventory(models.Model):
+    JAN = 1
+    FEB = 2
+    MAR = 3
+    APR = 4
+    MAY = 5
+    JUN = 6
+    JUL = 7
+    AUG = 8
+    SEP = 9
+    OCT = 10
+    NOV = 11
+    DEC = 12
+    Months= (
+        (JAN, 'Январь'),
+        (FEB, 'Февраль'),
+        (MAR, 'Март'),
+        (APR, 'Апрель'),
+        (MAY, 'Май'),
+        (JUN, 'Июнь'),
+        (JUL, 'Июль'),
+        (AUG, 'Август'),
+        (SEP, 'Сентябрь'),
+        (OCT, 'Октябрь'),
+        (NOV, 'Ноябрь'),
+        (DEC, 'Декабрь')
+    )
+    department = models.ForeignKey(Department, on_delete=models.PROTECT)
+    year = models.IntegerField()
+    month = models.IntegerField(choices=Months)
+    #day = models.IntegerField()
+    product = models.ForeignKey(Product, on_delete=models.PROTECT)
+    #month_start = models.IntegerField(default = 0)
+    goods_received = models.IntegerField(default = 0)
+    goods_issued = models.IntegerField(default = 0)
+    class Meta:
+        unique_together = ('department', 'year','month','product')
+    @property
+    def month_start(self):
+        previous_months = Inventory.objects.filter(department=self.department, year=self.year,
+                                                       month__lt=self.month, product=self.product).order_by('-year', '-month').first()
+        
+        if previous_months:
+            return previous_months.month_start + previous_months.goods_received - previous_months.goods_issued
+        else:
+            previous_years = Inventory.objects.filter(department=self.department, year__lt=self.year,
+                                                       product=self.product).order_by('-year', '-month').first()
+            if previous_years:
+                return previous_years.month_start + previous_years.goods_received - previous_years.goods_issued
+            else:
+                return 0
+
 
 # class Profile(models.Model):
 #     id = models.BigAutoField(primary_key=True)
