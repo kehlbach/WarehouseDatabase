@@ -68,11 +68,16 @@ class CategorySerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class ProductSerializer(serializers.ModelSerializer):
+    repr = serializers.SerializerMethodField()
 
+    def get_repr(self, obj):
+        return obj.repr
 
 class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
+        model = Product
         fields = '__all__'
 
 
