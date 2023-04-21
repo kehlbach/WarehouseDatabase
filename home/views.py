@@ -58,5 +58,10 @@ class ProductViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
     filterset_fields = ['vendor_code', 'name', 'category']
 
+class ReceiptViewSet(viewsets.ModelViewSet):
+    queryset = Receipt.objects.all().order_by('id')
+    serializer_class = ReceiptSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    filterset_fields = ['date', 'from_department', 'to_department', 'made_by']
 
 
