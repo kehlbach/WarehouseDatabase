@@ -25,6 +25,14 @@ class PermissionViewSet(viewsets.ModelViewSet):
     filterset_fields = ['action', 'subject']
 
 
+class ActionsView(APIView):
+    def get(self, request):
+        return Response(dict(Permission.Actions))
+
+class SubjectsView(APIView):
+    def get(self, request):
+        return Response(dict(Permission.Subjects))
+
 class RoleViewSet(viewsets.ModelViewSet):
     queryset = Role.objects.all()
     serializer_class = RoleSerializer
