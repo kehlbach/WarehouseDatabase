@@ -9,14 +9,31 @@ class Department(models.Model):
     is_hidden = models.BooleanField(default=False)
 
     def __str__(self):
+            return f'{self.name.capitalize()}'
+
+    @property
+    def repr(self):
+        return self.__str__()
+        
+    def save(self, *args, **kwargs):
+        if self.location == 'Пропустить':
+            self.location = ''
+        super().save(*args, **kwargs)
+
+
+class Role(models.Model):
+    name = models.CharField(max_length=32, unique=True)
+    #permissions = models.ManyToManyField(Permission, blank=True)
+    is_protected = models.BooleanField(default=False)
+
+    def __str__(self):
         return f'{self.name.capitalize()}'
 
     @property
     def repr(self):
         return self.__str__()
 
-
-class Permission(models.Model):
+class RolePermission(models.Model):
     VIEW = 10
     ADD = 11
     EDIT = 12
@@ -43,29 +60,17 @@ class Permission(models.Model):
         (PRODUCTS, 'Номенклатура'),
         (CATEGORIES, 'Категории'),
         (DEPARTMENTS, 'Отделения')
-    )
-
+    )   
+    role = models.ForeignKey(Role, on_delete=models.CASCADE)
+    
     action = models.IntegerField(choices=Actions)
     subject = models.IntegerField(choices=Subjects, blank=True, null=True)
 
     class Meta:
-        unique_together = ('action', 'subject')
+        unique_together = ('role','action', 'subject')
 
     def __str__(self):
-        return f'{self.get_action_display()} {self.get_subject_display()}' # type: ignore
-
-    @property
-    def repr(self):
-        return self.__str__()
-
-
-class Role(models.Model):
-    name = models.CharField(max_length=32, unique=True)
-    permissions = models.ManyToManyField(Permission, blank=True)
-    is_protected = models.BooleanField(default=False)
-
-    def __str__(self):
-        return f'{self.name.capitalize()}'
+        return f'{self.role.repr}: {self.get_action_display()} {self.get_subject_display()}' # type: ignore
 
     @property
     def repr(self):
@@ -114,17 +119,26 @@ class Category(models.Model):
 
 
 class Product(models.Model):
-    vendor_code = models.CharField(max_length=32, unique=True)
-    name = models.CharField(max_length=128, unique=True)
+    vendor_code = models.CharField(max_length=32,blank=True, null=True)
+    name = models.CharField(max_length=128)
     units = models.CharField(max_length=32, default='шт')
-    category = models.ForeignKey(Category, on_delete=models.PROTECT)
+    category = models.ForeignKey(Category, on_delete=models.PROTECT, blank=True, null=True)
+
+    class Meta:
+        unique_together = ('name','category')
 
     def __str__(self):
-        return f'{self.vendor_code}: {self.name}'
-
+        vendor_code = f'{self.vendor_code}:' if self.vendor_code else ''
+        category = f'{self.category.repr}: ' if self.category else ''
+        return vendor_code+category+self.name
+        
     @property
     def repr(self):
         return self.__str__()
+    def save(self, *args, **kwargs):
+        if self.vendor_code == 'Пропустить':
+            self.vendor_code = ''
+        super().save(*args, **kwargs)
 
 
 class Receipt(models.Model):
@@ -155,7 +169,8 @@ class Receipt(models.Model):
 
 class ReceiptProduct(models.Model):
     # Удаление Receipt рассматривается как отмена операции по накладной
-    receipt = models.ForeignKey(Receipt, on_delete=models.CASCADE)
+    # Товары накладной должны быть удалены отдельно
+    receipt = models.ForeignKey(Receipt, on_delete=models.PROTECT)
     product = models.ForeignKey(Product, on_delete=models.PROTECT)
     price = models.DecimalField(max_digits=10, decimal_places=2, default=0) # type: ignore
     quantity = models.IntegerField()
@@ -191,7 +206,7 @@ class Inventory(models.Model):
         (NOV, 'Ноябрь'),
         (DEC, 'Декабрь')
     )
-    department = models.ForeignKey(Department, on_delete=models.PROTECT)
+    department = models.ForeignKey(Department, on_delete=models.CASCADE)
     year = models.IntegerField()
     month = models.IntegerField(choices=Months)
     product = models.ForeignKey(Product, on_delete=models.PROTECT)
