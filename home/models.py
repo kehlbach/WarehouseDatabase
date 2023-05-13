@@ -14,7 +14,7 @@ class Department(models.Model):
     @property
     def repr(self):
         return self.__str__()
-        
+
     def save(self, *args, **kwargs):
         if self.location == 'Пропустить':
             self.location = ''
@@ -60,9 +60,9 @@ class RolePermission(models.Model):
         (PRODUCTS, 'Номенклатура'),
         (CATEGORIES, 'Категории'),
         (DEPARTMENTS, 'Отделения')
-    )   
+    )
     role = models.ForeignKey(Role, on_delete=models.CASCADE)
-    
+
     action = models.IntegerField(choices=Actions)
     subject = models.IntegerField(choices=Subjects, blank=True, null=True)
 
@@ -108,7 +108,7 @@ class Profile(models.Model):
 
 
 class Category(models.Model):
-    name = models.CharField(max_length=128, unique=True)
+    name = models.CharField(max_length=128)
 
     def __str__(self):
         return f'{self.name}'
@@ -131,7 +131,7 @@ class Product(models.Model):
         vendor_code = f'{self.vendor_code}:' if self.vendor_code else ''
         category = f'{self.category.repr}: ' if self.category else ''
         return vendor_code+category+self.name
-        
+
     @property
     def repr(self):
         return self.__str__()

@@ -1,5 +1,7 @@
 from django.urls import include, path
 from rest_framework import routers
+from django.conf import settings
+from django.conf.urls.static import static
 
 from home import views
 
@@ -20,4 +22,4 @@ urlpatterns = [
     path('actions/', views.ActionsView.as_view()),
     path('subjects/', views.SubjectsView.as_view()),
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
-]
+]+ static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
