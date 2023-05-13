@@ -12,10 +12,6 @@ databases = ['db1']
 
 
 def run():
-    # obj, created = Permission.objects.get_or_create(
-    #     action='смотреть',
-    #     subject='Разрешения'
-    # )
     subjects = dict(RolePermission.Subjects).keys()
     actions = dict(RolePermission.Actions).keys()
     admin = Role.objects.get_or_create(

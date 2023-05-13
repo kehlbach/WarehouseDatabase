@@ -1,8 +1,9 @@
-from datetime import datetime
-from django.core.exceptions import ValidationError
-from django.db.models import F
-from rest_framework import serializers
 import json
+from datetime import datetime
+
+from django.core.exceptions import ValidationError
+from rest_framework import serializers
+
 from .models import *
 
 
@@ -83,14 +84,10 @@ class ProfileSerializer(serializers.ModelSerializer):
     def get_permissions(self, obj):
         subjects = dict(RolePermission.Subjects).keys()
         result = []
-        permissions_by_subj = RolePermission.objects.filter(
-            role=obj.role)
+        permissions_by_subj = RolePermission.objects.filter(role=obj.role)
         for subject in subjects:
-            permissions_by_subj = RolePermission.objects.filter(
-                role=obj.role,
-                subject=subject)
-            result.append(
-                [subject, [obj.action for obj in permissions_by_subj]])
+            permissions_by_subj = RolePermission.objects.filter(role=obj.role, subject=subject)
+            result.append([subject, [obj.action for obj in permissions_by_subj]])
         return json.dumps(result)
 
     def get_role_name(self, obj):
@@ -185,7 +182,7 @@ class ReceiptProductSerializer(serializers.ModelSerializer):
                     rp.receipt.from_department.repr))
             if created:
                 inventory.goods_issued = rp.quantity
-            else:  # existed
+            else:
                 inventory.goods_issued += rp.quantity
             inventory.save()
         if rp.receipt.to_department:
@@ -196,7 +193,7 @@ class ReceiptProductSerializer(serializers.ModelSerializer):
                 product=rp.product,)
             if created:
                 inventory.goods_received = rp.quantity
-            else:  # existed
+            else:
                 inventory.goods_received += rp.quantity
             inventory.save()
         return rp
@@ -213,30 +210,21 @@ class InventorySerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-###
-
-
 class InventorySummarySerializer(serializers.Serializer):
-    # department = serializers.CharField(source='department.name')
-    # product = serializers.CharField(source='product.name')
     department = serializers.IntegerField(source='department.id')
     product = serializers.IntegerField(source='product.id')
     quantity = serializers.SerializerMethodField()
-
-    # def get_quantity(self, obj):
-    #     latest = Inventory.objects.filter(department=obj.department,
-    #                                        product=obj.product).order_by('-year','-month')[0]
-    #     return latest.month_start + latest.goods_received - latest.goods_issued
 
     def get_quantity(self, obj):
         date_str = self.context.get('request').query_params.get('date', None)  # type: ignore
         if date_str:
             date = datetime.strptime(date_str, '%Y-%m-%d').date()
             year, month = date.year, date.month
-            latest = Inventory.objects.filter(department=obj.department,
-                                              product=obj.product,
-                                              year=year,
-                                              month__lte=month).order_by('-year', '-month')
+            latest = Inventory.objects.filter(
+                department=obj.department,
+                product=obj.product,
+                year=year,
+                month__lte=month).order_by('-year', '-month')
             if latest:
                 return latest[0].month_start + latest[0].goods_received - latest[0].goods_issued
             else:
@@ -244,11 +232,12 @@ class InventorySummarySerializer(serializers.Serializer):
                     department=obj.department,
                     product=obj.product,
                     year__lt=year
-                    ).order_by('-year', '-month')
+                ).order_by('-year', '-month')
                 return latest[0].month_start + latest[0].goods_received - latest[0].goods_issued
         else:
-            latest = Inventory.objects.filter(department=obj.department,
-                                              product=obj.product).order_by('-year', '-month')[0]
+            latest = Inventory.objects.filter(
+                department=obj.department,
+                product=obj.product).order_by('-year', '-month')[0]
             return latest.month_start + latest.goods_received - latest.goods_issued
 
     class Meta:
