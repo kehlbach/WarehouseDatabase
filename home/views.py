@@ -1,20 +1,23 @@
 from datetime import datetime
-
+from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import OuterRef, Subquery
 from rest_framework import permissions, status, viewsets
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .models import *
-from .models import Profile
 from .serializers import *
+from .filters import *
+
 
 
 class DepartmentViewSet(viewsets.ModelViewSet):
     queryset = Department.objects.all().order_by('id')
     serializer_class = DepartmentSerializer
     permission_classes = [permissions.IsAuthenticated]
+    filter_backends = [DjangoFilterBackend, DepartmentsFilterBackend]
     filterset_fields = ['name']
+    
 
 
 class RolePermissionViewSet(viewsets.ModelViewSet):
@@ -63,11 +66,11 @@ class ProductViewSet(viewsets.ModelViewSet):
 
 
 class ReceiptViewSet(viewsets.ModelViewSet):
-    queryset = Receipt.objects.all().order_by('id')
+    queryset = Receipt.objects.all().order_by('-id')
     serializer_class = ReceiptSerializer
     permission_classes = [permissions.IsAuthenticated]
+    filter_backends = [DjangoFilterBackend, ReceiptsFilterBackend]
     filterset_fields = ['date', 'from_department', 'to_department', 'made_by']
-
 
 class ReceiptProductViewSet(viewsets.ModelViewSet):
     queryset = ReceiptProduct.objects.all().order_by('id')

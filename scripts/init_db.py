@@ -32,7 +32,7 @@ def run():
         phone_number='+7 747 930 9084',
         role=admin,
     )[0]
-    n = 15
+    n = 3
     categories = []
     for i in range(n):
         if i < 6:

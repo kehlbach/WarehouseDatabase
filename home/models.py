@@ -1,6 +1,6 @@
 from django.core.validators import RegexValidator
 from django.db import models
-
+from datetime import date
 
 class Department(models.Model):
     name = models.CharField(max_length=32, unique=True)
@@ -14,6 +14,12 @@ class Department(models.Model):
     @property
     def repr(self):
         return self.__str__()
+
+    @property
+    def receipts_count(self):
+        from_d = len(Receipt.objects.filter(from_department=self.id))  # type: ignore
+        to_d = len(Receipt.objects.filter(to_department=self.id))  # type: ignore
+        return from_d+to_d
 
     def save(self, *args, **kwargs):
         if self.location == 'Пропустить':
@@ -140,7 +146,10 @@ class Product(models.Model):
 
 
 class Receipt(models.Model):
-    date = models.DateField()
+    #date = models.DateField()
+    # date now:
+    date = models.DateField(default=date.today)#auto_now_add=True)
+    time = models.TimeField(auto_now_add=True)
     from_department = models.ForeignKey(
         Department,
         on_delete=models.PROTECT,
@@ -158,7 +167,10 @@ class Receipt(models.Model):
 
     def __str__(self):
         # type: ignore
-        return '{}: {} {}'.format(self.id, self.type, self.date)  # type: ignore
+        return '{}: {} {} {}'.format(self.id, # type: ignore
+                                     self.type, 
+                                     self.date.strftime('%d/%m/%Y'),
+                                     self.time.strftime("%H:%M"))  
 
     @property
     def repr(self):

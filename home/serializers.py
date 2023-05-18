@@ -3,15 +3,19 @@ from datetime import datetime
 
 from django.core.exceptions import ValidationError
 from rest_framework import serializers
-
+from rest_framework.response import Response
+from rest_framework import status
 from .models import *
 
 
 class DepartmentSerializer(serializers.ModelSerializer):
     repr = serializers.SerializerMethodField()
-
+    # Количество машин
+    receipts_count = serializers.SerializerMethodField()
     def get_repr(self, obj):
         return obj.repr
+    def get_receipts_count(self, obj):
+        return obj.receipts_count
 
     class Meta:
         model = Department
@@ -126,12 +130,26 @@ class ProductSerializer(serializers.ModelSerializer):
 class ReceiptSerializer(serializers.ModelSerializer):
     repr = serializers.SerializerMethodField()
     type = serializers.SerializerMethodField()
+    from_department_name = serializers.SerializerMethodField()
+    to_department_name = serializers.SerializerMethodField()
 
     def get_repr(self, obj):
         return obj.repr
 
     def get_type(self, obj):
         return obj.type
+
+    def get_from_department_name(self, obj):
+        if obj.from_department:
+            return obj.from_department.name
+        else:
+            return ''
+    
+    def get_to_department_name(self, obj):
+        if obj.to_department:
+            return obj.to_department.name
+        else:
+            return ''
 
     class Meta:
         model = Receipt
@@ -143,8 +161,25 @@ class ReceiptProductSerializer(serializers.ModelSerializer):
         model = ReceiptProduct
         fields = '__all__'
 
+    product_name = serializers.SerializerMethodField()
+    product_units = serializers.SerializerMethodField()
+    def get_product_name(self, obj):
+        return obj.product.name
+    def get_product_units(self, obj):
+        return obj.product.units
+    
     def create(self, validated_data):
-        rp = ReceiptProduct.objects.create(**validated_data)
+        quantity = validated_data.get('quantity', 0)
+        product_id = validated_data.get('product_id')
+        if quantity == 0:
+            # If quantity is 0, delete an existing object if one exists and do not create a new one
+            existing_instance = ReceiptProduct.objects.filter(product_id=product_id).first()
+            if existing_instance:
+                existing_instance.delete()
+            return
+        else:
+            # If quantity is not 0, create a new object
+            rp = ReceiptProduct.objects.create(**validated_data)
         if rp.receipt.from_department:
             inventory, created = Inventory.objects.get_or_create(
                 department=rp.receipt.from_department,
@@ -176,10 +211,17 @@ class ReceiptProductSerializer(serializers.ModelSerializer):
                 if obj and obj != rp:
                     exists -= obj.quantity
             if issued > exists:
+                print(rp.product)
+                _product_name = rp.product.name
+                department_name = rp.receipt.from_department.repr
+                text = 'Not enough {} on department {}'.format(
+                    _product_name,
+                    department_name)
                 rp.delete()
-                raise ValidationError('Not enough {} on department {}'.format(
-                    rp.product.repr,
-                    rp.receipt.from_department.repr))
+                return Response({"ValidationError": text}, status=status.HTTP_400_BAD_REQUEST)
+                # raise ValidationError('Not enough {} on department {}'.format(
+                #     rp.product.repr,
+                #     rp.receipt.from_department.repr))
             if created:
                 inventory.goods_issued = rp.quantity
             else:
@@ -197,7 +239,7 @@ class ReceiptProductSerializer(serializers.ModelSerializer):
                 inventory.goods_received += rp.quantity
             inventory.save()
         return rp
-
+    
 
 class InventorySerializer(serializers.ModelSerializer):
     month_start = serializers.SerializerMethodField()
@@ -212,8 +254,20 @@ class InventorySerializer(serializers.ModelSerializer):
 
 class InventorySummarySerializer(serializers.Serializer):
     department = serializers.IntegerField(source='department.id')
+    department_name = serializers.SerializerMethodField()
     product = serializers.IntegerField(source='product.id')
+    product_name = serializers.SerializerMethodField()
+    product_units = serializers.SerializerMethodField()
     quantity = serializers.SerializerMethodField()
+
+    def get_department_name(self, obj):
+        return obj.department.name
+    
+    def get_product_name(self, obj):
+        return obj.product.name
+
+    def get_product_units(self, obj):
+        return obj.product.units
 
     def get_quantity(self, obj):
         date_str = self.context.get('request').query_params.get('date', None)  # type: ignore
