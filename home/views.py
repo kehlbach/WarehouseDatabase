@@ -62,7 +62,7 @@ class CategoryViewSet(CustomViewSet):
 
 
 class ProductViewSet(CustomViewSet):
-    queryset = Product.objects.all().order_by('id')
+    queryset = Product.objects.all().order_by('name').order_by('category__name')
     serializer_class = ProductSerializer
     permission_classes = [permissions.IsAuthenticated]
     filterset_fields = ['vendor_code', 'name', 'category']
@@ -72,7 +72,7 @@ class ReceiptViewSet(viewsets.ModelViewSet):
     queryset = Receipt.objects.all().order_by('-id')
     serializer_class = ReceiptSerializer
     permission_classes = [permissions.IsAuthenticated]
-    filter_backends = [DjangoFilterBackend, ReceiptsFilterBackend, RequesterFilterBackend]
+    filter_backends = [RequesterFilterBackend, DjangoFilterBackend, ReceiptsFilterBackend]
     filterset_fields = ['date', 'from_department', 'to_department', 'made_by']
 
 class ReceiptProductViewSet(CustomViewSet):
