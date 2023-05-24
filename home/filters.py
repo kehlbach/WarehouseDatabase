@@ -121,8 +121,8 @@ class RequesterFilterBackend(BaseFilterBackend):
                     else:  # ReceiptProductViewSet
                         receipt_product = ReceiptProduct.objects.get(id=kwargs['pk'])
                         receipt = receipt_product.receipt
-                    if not (receipt.from_department == kwargs['pk']
-                            or receipt.to_department == kwargs['pk']):
+                    if ((receipt.from_department and not receipt.from_department in profile.departments.all()) # type: ignore
+                            or (receipt.to_department and not receipt.to_department in profile.departments.all())):# type: ignore
                         raise PermissionDenied(error)
             elif isinstance(view, views.CategoryViewSet):
                 subject = RolePermission.CATEGORIES
