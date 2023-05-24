@@ -1,7 +1,7 @@
 import json
 from datetime import datetime
 
-from django.core.exceptions import ValidationError
+from rest_framework.exceptions import ValidationError
 from rest_framework import serializers
 from rest_framework.response import Response
 from rest_framework import status
@@ -218,10 +218,9 @@ class ReceiptProductSerializer(serializers.ModelSerializer):
                     _product_name,
                     department_name)
                 rp.delete()
-                return Response({"ValidationError": text}, status=status.HTTP_400_BAD_REQUEST)
-                # raise ValidationError('Not enough {} on department {}'.format(
-                #     rp.product.repr,
-                #     rp.receipt.from_department.repr))
+                raise ValidationError('Not enough {} on department {}'.format(
+                    rp.product.repr,
+                    rp.receipt.from_department.repr))
             if created:
                 inventory.goods_issued = rp.quantity
             else:
