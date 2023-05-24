@@ -11,3 +11,4 @@ home/fixtures/admin.json
 SQL ADD DATABASE.txt
 .VSCodeCounter/
 static/
+scripts/playground.py
