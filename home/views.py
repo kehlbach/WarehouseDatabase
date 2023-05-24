@@ -10,17 +10,20 @@ from .serializers import *
 from .filters import *
 
 
+class CustomViewSet(viewsets.ModelViewSet):
+    filter_backends = [DjangoFilterBackend, RequesterFilterBackend]
+
 
 class DepartmentViewSet(viewsets.ModelViewSet):
     queryset = Department.objects.all().order_by('id')
     serializer_class = DepartmentSerializer
     permission_classes = [permissions.IsAuthenticated]
-    filter_backends = [DjangoFilterBackend, DepartmentsFilterBackend]
+    filter_backends = [DjangoFilterBackend, DepartmentsFilterBackend,RequesterFilterBackend]
     filterset_fields = ['name']
     
 
 
-class RolePermissionViewSet(viewsets.ModelViewSet):
+class RolePermissionViewSet(CustomViewSet):
     queryset = RolePermission.objects.all().order_by('id')
     serializer_class = RolePermissionSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -37,28 +40,28 @@ class SubjectsView(APIView):
         return Response(dict(RolePermission.Subjects))
 
 
-class RoleViewSet(viewsets.ModelViewSet):
+class RoleViewSet(CustomViewSet):
     queryset = Role.objects.all().order_by('id')
     serializer_class = RoleSerializer
     permission_classes = [permissions.IsAuthenticated]
     filterset_fields = ['name']
 
 
-class ProfileViewSet(viewsets.ModelViewSet):
+class ProfileViewSet(CustomViewSet):
     queryset = Profile.objects.all().order_by('id')
     serializer_class = ProfileSerializer
     permission_classes = [permissions.IsAuthenticated]
     filterset_fields = ['phone_number', 'role', 'user_id']
 
 
-class CategoryViewSet(viewsets.ModelViewSet):
+class CategoryViewSet(CustomViewSet):
     queryset = Category.objects.all().order_by('id')
     serializer_class = CategorySerializer
     permission_classes = [permissions.IsAuthenticated]
     filterset_fields = ['name']
 
 
-class ProductViewSet(viewsets.ModelViewSet):
+class ProductViewSet(CustomViewSet):
     queryset = Product.objects.all().order_by('id')
     serializer_class = ProductSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -69,10 +72,10 @@ class ReceiptViewSet(viewsets.ModelViewSet):
     queryset = Receipt.objects.all().order_by('-id')
     serializer_class = ReceiptSerializer
     permission_classes = [permissions.IsAuthenticated]
-    filter_backends = [DjangoFilterBackend, ReceiptsFilterBackend]
+    filter_backends = [DjangoFilterBackend, ReceiptsFilterBackend, RequesterFilterBackend]
     filterset_fields = ['date', 'from_department', 'to_department', 'made_by']
 
-class ReceiptProductViewSet(viewsets.ModelViewSet):
+class ReceiptProductViewSet(CustomViewSet):
     queryset = ReceiptProduct.objects.all().order_by('id')
     serializer_class = ReceiptProductSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -129,9 +132,8 @@ class ReceiptProductViewSet(viewsets.ModelViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class InventoryViewSet(viewsets.ModelViewSet):
+class InventoryViewSet(CustomViewSet):
     queryset = Inventory.objects.all().order_by('-year', '-month')
-    serializer_class = InventorySerializer
     serializer_class = InventorySerializer
     permission_classes = [permissions.IsAuthenticated]
     filterset_fields = ['department', 'year', 'month', 'product']
@@ -140,6 +142,7 @@ class InventoryViewSet(viewsets.ModelViewSet):
 class InventorySummaryViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = InventorySummarySerializer
     permission_classes = [permissions.IsAuthenticated]
+    filter_backends = [DjangoFilterBackend, RequesterFilterBackend]
     filterset_fields = ['department', 'product']
 
     def get_queryset(self):
