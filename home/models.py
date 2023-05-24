@@ -62,7 +62,7 @@ class RolePermission(models.Model):
         (ROLES, 'Роли'),
         (INVENTORY, 'Остатки'),
         (RECEIPTS, 'Накладные'),
-        (PRODUCTS, 'Номенклатура'),
+        (PRODUCTS, 'Товары'),
         (CATEGORIES, 'Категории'),
         (DEPARTMENTS, 'Отделения')
     )
