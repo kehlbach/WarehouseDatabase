@@ -1,9 +1,11 @@
 # WarehouseDatabase
 
+![Python 3.10](https://img.shields.io/badge/python-3.10-blue.svg)
+
 This is Django REST API Database service for warehouse accounting.
 
 ## Running Locally
-First clone and setup the virtual environment (consider creating fork and cloning it)
+First clone and setup the virtual environment
 ```cmd
 git clone https://github.com/valentinkelbakh/WarehouseDatabase.git
 cd WarehouseDatabase
@@ -34,16 +36,20 @@ host=localhost
 port=3306
 ```
 
-Create user, these name and password are used for authorization of HTTP requests:
-```
-python manage.py createsuperuser
-```
-Next migrate all models to database:
+Migrate all models to database:
 ```
 python manage.py makemigrations
 python manage.py makemigrations home
 python manage.py migrate
 ```
+
+Create user:
+```
+python manage.py createsuperuser
+```
+
+These name and password are used for authorization of HTTP requests, and should be specified in Warehouse Bot .env file under DB_LOGIN and DB_PASSWORD.
+
 To run an app:
 ```
 python manage.py runserver
