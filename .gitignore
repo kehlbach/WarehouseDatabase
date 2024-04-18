@@ -12,3 +12,4 @@ SQL ADD DATABASE.txt
 .VSCodeCounter/
 static/
 scripts/playground.py
+/scripts
