@@ -19,7 +19,10 @@ In directory with manage.py create files .env and db1.cnf.
 ```
 DEBUG=[True or False]
 SECRET_KEY=[Django Secret Key]
+SQLITE=[True or False]
 ```
+You can set SQLITE to True if you want to use SQLite Database for testing purposes.
+
 db1.cnf contains (for local MySQL Database):
 ```
 [client]
