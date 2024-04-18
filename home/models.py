@@ -1,6 +1,7 @@
 from django.core.validators import RegexValidator
 from django.db import models
 from datetime import date
+import phonenumbers
 
 class Department(models.Model):
     name = models.CharField(max_length=32, unique=True)
@@ -84,10 +85,8 @@ class RolePermission(models.Model):
 
 
 class Profile(models.Model):
-    pattern = r'\+?\d?[ -]?\(?\d{3}\)?[ -\.]?\d{3}[ -\.]?\d{2}[ -]?\d{2}'
-    phone_regex = RegexValidator(regex=pattern, message="Phone number is not identified.")
     name = models.CharField(max_length=64, blank=True)
-    phone_number = models.CharField(validators=[phone_regex], max_length=17, unique=True)
+    phone_number = models.CharField(max_length=20, unique=True)
     user_id = models.CharField(max_length=32, unique=True, null=True, blank=True)
     role = models.ForeignKey(Role, on_delete=models.PROTECT)
     departments = models.ManyToManyField(Department, blank=True)
@@ -108,7 +107,11 @@ class Profile(models.Model):
             return name
         else:
             return self.phone_number
-
+    def save(self, *args, **kwargs):
+        if self.phone_number:
+            parsed_number = phonenumbers.parse(self.phone_number)
+            self.phone_number = phonenumbers.format_number(parsed_number, phonenumbers.PhoneNumberFormat.INTERNATIONAL)
+        super().save(*args, **kwargs)
 
 class Category(models.Model):
     name = models.CharField(max_length=128)
