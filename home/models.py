@@ -23,7 +23,7 @@ class Department(models.Model):
         return from_d+to_d
 
     def save(self, *args, **kwargs):
-        if self.location == 'Пропустить':
+        if self.location == 'Skip':
             self.location = ''
         super().save(*args, **kwargs)
 
@@ -46,10 +46,10 @@ class RolePermission(models.Model):
     EDIT = 12
     DELETE = 13
     Actions = (
-        (VIEW, 'смотреть',),
-        (ADD, 'добавлять',),
-        (EDIT, 'изменять',),
-        (DELETE, 'удалять')
+        (VIEW, 'view',),
+        (ADD, 'add',),
+        (EDIT, 'edit',),
+        (DELETE, 'delete')
     )
     PROFILES = 20
     ROLES = 21
@@ -59,13 +59,13 @@ class RolePermission(models.Model):
     CATEGORIES = 25
     DEPARTMENTS = 26
     Subjects = (
-        (PROFILES, 'Пользователи'),
-        (ROLES, 'Роли'),
-        (INVENTORY, 'Остатки'),
-        (RECEIPTS, 'Накладные'),
-        (PRODUCTS, 'Товары'),
-        (CATEGORIES, 'Категории'),
-        (DEPARTMENTS, 'Отделения')
+        (PROFILES, 'Profiles'),
+        (ROLES, 'Roles'),
+        (INVENTORY, 'Inventory'),
+        (RECEIPTS, 'Receipts'),
+        (PRODUCTS, 'Products'),
+        (CATEGORIES, 'Categories'),
+        (DEPARTMENTS, 'Departments')
     )
     role = models.ForeignKey(Role, on_delete=models.CASCADE)
 
@@ -182,11 +182,11 @@ class Receipt(models.Model):
     @property
     def type(self):
         if self.from_department and self.to_department:
-            return 'Перемещение'
+            return 'Transfer'
         elif self.from_department:
-            return 'Расходная'
+            return 'Outgoing'
         else:
-            return 'Приходная'
+            return 'Incoming'
 
 
 class ReceiptProduct(models.Model):
