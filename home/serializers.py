@@ -10,7 +10,6 @@ from .models import *
 
 class DepartmentSerializer(serializers.ModelSerializer):
     repr = serializers.SerializerMethodField()
-    # Количество машин
     receipts_count = serializers.SerializerMethodField()
     def get_repr(self, obj):
         return obj.repr
@@ -268,8 +267,16 @@ class InventorySummarySerializer(serializers.Serializer):
     def get_product_units(self, obj):
         return obj.product.units
 
-    def get_quantity(self, obj):
+    def get_quantity(self, obj) -> int:
         date_str = self.context.get('request').query_params.get('date', None)  # type: ignore
+        """
+        Get the quantity of product in inventory on the given date.
+        If no date is given, the quantity as of the last inventory is returned.
+
+        :param obj: InventorySummary instance
+        :return: quantity of product in inventory
+        """
+        # note: may require optimization of queries if performance is an issue
         if date_str:
             date = datetime.strptime(date_str, '%Y-%m-%d').date()
             year, month = date.year, date.month
@@ -279,8 +286,11 @@ class InventorySummarySerializer(serializers.Serializer):
                 year=year,
                 month__lte=month).order_by('-year', '-month')
             if latest:
+                # If there is an inventory in the given month, or closest previous month in given year, return the quantity
                 return latest[0].month_start + latest[0].goods_received - latest[0].goods_issued
             else:
+                # If there is no inventory in the given year, get the latest inventory
+                # for the given department and product for closest to given date prevoius year/month
                 latest = Inventory.objects.filter(
                     department=obj.department,
                     product=obj.product,
@@ -288,6 +298,7 @@ class InventorySummarySerializer(serializers.Serializer):
                 ).order_by('-year', '-month')
                 return latest[0].month_start + latest[0].goods_received - latest[0].goods_issued
         else:
+            # Get the latest inventory for the given department and product
             latest = Inventory.objects.filter(
                 department=obj.department,
                 product=obj.product).order_by('-year', '-month')[0]

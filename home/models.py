@@ -240,7 +240,18 @@ class Inventory(models.Model):
         unique_together = ('department', 'year', 'month', 'product')
 
     @property
-    def month_start(self):
+    def month_start(self) -> int:
+        """
+        Calculate the starting quantity of a product in the current month.
+
+        This property calculates the starting quantity of a product in the current month by summing the ending quantity
+        of the previous month and subtracting the quantity issued in the previous month. If there are no previous
+        months or years, the starting quantity is set to 0.
+
+        Returns:
+            int: The starting quantity of the product in the current month.
+        """
+        # note: may require optimization of queries if performance is an issue
         prev_months = Inventory.objects.filter(
             department=self.department,
             year=self.year,

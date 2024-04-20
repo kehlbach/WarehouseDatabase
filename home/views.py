@@ -146,8 +146,19 @@ class InventorySummaryViewSet(viewsets.ReadOnlyModelViewSet):
     filterset_fields = ['department', 'product']
 
     def get_queryset(self):
+        """
+        Retrieves the queryset for the view, which is filtered by the date
+        parameter if provided.
+        """
+        # note: may require optimization of queries if performance is an issue
         date_str = self.request.query_params.get('date', None)  # type: ignore
         if date_str:
+            """
+            If the date is provided, then the queryset is filtered by the date
+            and the records with the latest month and year are returned. If no
+            records are found with the exact date, then the queryset is filtered
+            by closest previous month in the given year.
+            """
             date = datetime.strptime(date_str, '%Y-%m-%d').date()
             year, month = date.year, date.month
             grouped_records = Inventory.objects.filter(year=year, month__lte=month).values('department', 'product').annotate(
@@ -164,6 +175,10 @@ class InventorySummaryViewSet(viewsets.ReadOnlyModelViewSet):
                 latest_records = Inventory.objects.filter(id__in=Subquery(
                     grouped_records.values('latest_id'))).order_by('department', 'product')
             else:
+                """
+                If no records are found with given year, 
+                then the queryset is filtered by closest month in closest previous year
+                """
                 grouped_records = Inventory.objects.filter(year__lt=year).values('department', 'product').annotate(
                     latest_id=Subquery(
                         Inventory.objects.filter(
@@ -177,9 +192,16 @@ class InventorySummaryViewSet(viewsets.ReadOnlyModelViewSet):
                     latest_records = Inventory.objects.filter(id__in=Subquery(
                         grouped_records.values('latest_id'))).order_by('department', 'product')
                 else:
+                    """
+                    If no records are found, then an empty queryset is
+                    returned.
+                    """
                     latest_records = Inventory.objects.none()
             return latest_records
         else:
+            """
+            If the date is not provided, then the latest inventory records are returned.
+            """
             grouped_records = Inventory.objects.values('department', 'product').annotate(
                 latest_id=Subquery(
                     Inventory.objects.filter(
