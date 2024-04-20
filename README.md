@@ -55,3 +55,6 @@ To run an app:
 python manage.py runserver
 ```
 
+## Database Schema
+
+![db_schema](https://github.com/valentinkelbakh/WarehouseDatabase/assets/114210745/87deaec4-4324-443e-8791-63b8a749ad92)
