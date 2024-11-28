@@ -21,6 +21,21 @@ class DepartmentViewSet(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend, DepartmentsFilterBackend,RequesterFilterBackend]
     filterset_fields = ['name']
     
+    # adds department to profile that created it
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        requester = request.query_params.get("requester")
+        if requester:
+            if Profile.objects.filter(user_id=requester).exists():
+                profile = Profile.objects.get(user_id=requester)
+                profile.departments.add(serializer.instance)
+                profile.save()
+        return Response(
+            serializer.data, status=status.HTTP_201_CREATED, headers=headers
+        )
 
 
 class RolePermissionViewSet(CustomViewSet):
