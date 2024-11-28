@@ -11,14 +11,16 @@ from .models import *
 class DepartmentSerializer(serializers.ModelSerializer):
     repr = serializers.SerializerMethodField()
     receipts_count = serializers.SerializerMethodField()
+
     def get_repr(self, obj):
         return obj.repr
+
     def get_receipts_count(self, obj):
         return obj.receipts_count
 
     class Meta:
         model = Department
-        fields = '__all__'
+        fields = "__all__"
 
 
 class RolePermissionSerializer(serializers.ModelSerializer):
@@ -29,7 +31,7 @@ class RolePermissionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = RolePermission
-        fields = '__all__'
+        fields = "__all__"
 
 
 class RoleSerializer(serializers.ModelSerializer):
@@ -42,33 +44,33 @@ class RoleSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Role
-        fields = '__all__'
+        fields = "__all__"
 
     def get_permissions(self, obj):
         subjects = dict(RolePermission.Subjects).keys()
         result = []
-        permissions_by_subj = RolePermission.objects.filter(
-            role=obj)
+        permissions_by_subj = RolePermission.objects.filter(role=obj)
         for subject in subjects:
             permissions_by_subj = RolePermission.objects.filter(
-                role=obj,
-                subject=subject)
-            result.append(
-                [subject, [obj.action for obj in permissions_by_subj]])
+                role=obj, subject=subject
+            )
+            result.append([subject, [obj.action for obj in permissions_by_subj]])
         return json.dumps(result)
 
     def get_permissions_repr(self, obj):
         subjects = dict(RolePermission.Subjects).keys()
-        value = ''
+        value = ""
         for each in subjects:
             _subjects = dict(RolePermission.Subjects)
             _actions = dict(RolePermission.Actions)
             permissions_by_subj = RolePermission.objects.filter(
-                role=obj.id,
-                subject=each
+                role=obj.id, subject=each
             )
-            value += f'{_subjects[each]}:'+','.join(
-                [_actions[obj.action] for obj in permissions_by_subj]) + ' '  # type: ignore
+            value += (
+                f"{_subjects[each]}:"
+                + ",".join([_actions[obj.action] for obj in permissions_by_subj])
+                + " "
+            )  # type: ignore
         return value
 
 
@@ -77,19 +79,22 @@ class ProfileSerializer(serializers.ModelSerializer):
 
     def get_repr(self, obj):
         return obj.repr
+
     permissions = serializers.SerializerMethodField()
     role_name = serializers.SerializerMethodField()
 
     class Meta:
         model = Profile
-        fields = '__all__'
+        fields = "__all__"
 
     def get_permissions(self, obj):
         subjects = dict(RolePermission.Subjects).keys()
         result = []
         permissions_by_subj = RolePermission.objects.filter(role=obj.role)
         for subject in subjects:
-            permissions_by_subj = RolePermission.objects.filter(role=obj.role, subject=subject)
+            permissions_by_subj = RolePermission.objects.filter(
+                role=obj.role, subject=subject
+            )
             result.append([subject, [obj.action for obj in permissions_by_subj]])
         return json.dumps(result)
 
@@ -105,7 +110,7 @@ class CategorySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Category
-        fields = '__all__'
+        fields = "__all__"
 
 
 class ProductSerializer(serializers.ModelSerializer):
@@ -117,13 +122,13 @@ class ProductSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Product
-        fields = '__all__'
+        fields = "__all__"
 
     def get_category_name(self, obj):
         if obj.category:
             return obj.category.name
         else:
-            return ''
+            return ""
 
 
 class ReceiptSerializer(serializers.ModelSerializer):
@@ -142,37 +147,41 @@ class ReceiptSerializer(serializers.ModelSerializer):
         if obj.from_department:
             return obj.from_department.name
         else:
-            return ''
-    
+            return ""
+
     def get_to_department_name(self, obj):
         if obj.to_department:
             return obj.to_department.name
         else:
-            return ''
+            return ""
 
     class Meta:
         model = Receipt
-        fields = '__all__'
+        fields = "__all__"
 
 
 class ReceiptProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = ReceiptProduct
-        fields = '__all__'
+        fields = "__all__"
 
     product_name = serializers.SerializerMethodField()
     product_units = serializers.SerializerMethodField()
+
     def get_product_name(self, obj):
         return obj.product.name
+
     def get_product_units(self, obj):
         return obj.product.units
-    
+
     def create(self, validated_data):
-        quantity = validated_data.get('quantity', 0)
-        product_id = validated_data.get('product_id')
+        quantity = validated_data.get("quantity", 0)
+        product_id = validated_data.get("product_id")
         if quantity == 0:
             # If quantity is 0, delete an existing object if one exists and do not create a new one
-            existing_instance = ReceiptProduct.objects.filter(product_id=product_id).first()
+            existing_instance = ReceiptProduct.objects.filter(
+                product_id=product_id
+            ).first()
             if existing_instance:
                 existing_instance.delete()
             return
@@ -184,42 +193,47 @@ class ReceiptProductSerializer(serializers.ModelSerializer):
                 department=rp.receipt.from_department,
                 year=rp.receipt.date.year,
                 month=rp.receipt.date.month,
-                product=rp.product,)
+                product=rp.product,
+            )
             issued = rp.quantity
             exists = inventory.month_start
             receipts_to_department = Receipt.objects.filter(
                 to_department=rp.receipt.from_department,
                 date__year=rp.receipt.date.year,
                 date__month=rp.receipt.date.month,
-                date__day__lte=rp.receipt.date.day)
+                date__day__lte=rp.receipt.date.day,
+            )
             for each in receipts_to_department:
                 obj = ReceiptProduct.objects.filter(
-                    receipt=each,
-                    product=rp.product).first()
+                    receipt=each, product=rp.product
+                ).first()
                 if obj and obj != rp:
                     exists += obj.quantity
             receipts_from_department = Receipt.objects.filter(
                 from_department=rp.receipt.from_department,
                 date__year=rp.receipt.date.year,
                 date__month=rp.receipt.date.month,
-                date__day__lte=rp.receipt.date.day)
+                date__day__lte=rp.receipt.date.day,
+            )
             for each in receipts_from_department:
                 obj = ReceiptProduct.objects.filter(
-                    receipt=each,
-                    product=rp.product).first()
+                    receipt=each, product=rp.product
+                ).first()
                 if obj and obj != rp:
                     exists -= obj.quantity
             if issued > exists:
                 print(rp.product)
                 _product_name = rp.product.name
                 department_name = rp.receipt.from_department.repr
-                text = 'Not enough {} on department {}'.format(
-                    _product_name,
-                    department_name)
+                text = "Not enough {} on department {}".format(
+                    _product_name, department_name
+                )
                 rp.delete()
-                raise ValidationError('Not enough {} on department {}'.format(
-                    rp.product.repr,
-                    rp.receipt.from_department.repr))
+                raise ValidationError(
+                    "Not enough {} on department {}".format(
+                        rp.product.repr, rp.receipt.from_department.repr
+                    )
+                )
             if created:
                 inventory.goods_issued = rp.quantity
             else:
@@ -230,14 +244,15 @@ class ReceiptProductSerializer(serializers.ModelSerializer):
                 department=rp.receipt.to_department,
                 year=rp.receipt.date.year,
                 month=rp.receipt.date.month,
-                product=rp.product,)
+                product=rp.product,
+            )
             if created:
                 inventory.goods_received = rp.quantity
             else:
                 inventory.goods_received += rp.quantity
             inventory.save()
         return rp
-    
+
 
 class InventorySerializer(serializers.ModelSerializer):
     month_start = serializers.SerializerMethodField()
@@ -247,20 +262,20 @@ class InventorySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Inventory
-        fields = '__all__'
+        fields = "__all__"
 
 
 class InventorySummarySerializer(serializers.Serializer):
-    department = serializers.IntegerField(source='department.id')
+    department = serializers.IntegerField(source="department.id")
     department_name = serializers.SerializerMethodField()
-    product = serializers.IntegerField(source='product.id')
+    product = serializers.IntegerField(source="product.id")
     product_name = serializers.SerializerMethodField()
     product_units = serializers.SerializerMethodField()
     quantity = serializers.SerializerMethodField()
 
     def get_department_name(self, obj):
         return obj.department.name
-    
+
     def get_product_name(self, obj):
         return obj.product.name
 
@@ -268,7 +283,7 @@ class InventorySummarySerializer(serializers.Serializer):
         return obj.product.units
 
     def get_quantity(self, obj) -> int:
-        date_str = self.context.get('request').query_params.get('date', None)  # type: ignore
+        date_str = self.context.get("request").query_params.get("date", None)  # type: ignore
         """
         Get the quantity of product in inventory on the given date.
         If no date is given, the quantity as of the last inventory is returned.
@@ -278,31 +293,38 @@ class InventorySummarySerializer(serializers.Serializer):
         """
         # note: may require optimization of queries if performance is an issue
         if date_str:
-            date = datetime.strptime(date_str, '%Y-%m-%d').date()
+            date = datetime.strptime(date_str, "%Y-%m-%d").date()
             year, month = date.year, date.month
             latest = Inventory.objects.filter(
                 department=obj.department,
                 product=obj.product,
                 year=year,
-                month__lte=month).order_by('-year', '-month')
+                month__lte=month,
+            ).order_by("-year", "-month")
             if latest:
                 # If there is an inventory in the given month, or closest previous month in given year, return the quantity
-                return latest[0].month_start + latest[0].goods_received - latest[0].goods_issued
+                return (
+                    latest[0].month_start
+                    + latest[0].goods_received
+                    - latest[0].goods_issued
+                )
             else:
                 # If there is no inventory in the given year, get the latest inventory
                 # for the given department and product for closest to given date prevoius year/month
                 latest = Inventory.objects.filter(
-                    department=obj.department,
-                    product=obj.product,
-                    year__lt=year
-                ).order_by('-year', '-month')
-                return latest[0].month_start + latest[0].goods_received - latest[0].goods_issued
+                    department=obj.department, product=obj.product, year__lt=year
+                ).order_by("-year", "-month")
+                return (
+                    latest[0].month_start
+                    + latest[0].goods_received
+                    - latest[0].goods_issued
+                )
         else:
             # Get the latest inventory for the given department and product
             latest = Inventory.objects.filter(
-                department=obj.department,
-                product=obj.product).order_by('-year', '-month')[0]
+                department=obj.department, product=obj.product
+            ).order_by("-year", "-month")[0]
             return latest.month_start + latest.goods_received - latest.goods_issued
 
     class Meta:
-        fields = ['department', 'product', 'quantity']
+        fields = ["department", "product", "quantity"]
