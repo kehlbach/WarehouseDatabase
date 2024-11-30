@@ -19,15 +19,19 @@ from home.models import (
     RolePermission,
 )
 
-user_credentials = {"username": "admin", "password": "admin"}
-
 # To do next:
 # 1. Add tests for InventorySummary
-# 2. Add tests involving filters (separately or incorporate into existing tests?)
+# 2. Add tests involving filters
+# (separately or incorporate into existing tests?)
+
+
+user_credentials = {"username": "admin", "password": "admin"}
+User = get_user_model()
 
 
 class ProductTests(APITestCase):
     def setUp(self):
+
         self.user = User.objects.create_user(**user_credentials)
         self.category = Category.objects.create(name="Cars")
 
@@ -54,10 +58,8 @@ class ProductTests(APITestCase):
         role = Role.objects.create(name="Test Role")
         profile = Profile.objects.create(phone_number="+12345678912", role=role)
         to_department = Department.objects.create(name="Testing Department")
-        self.receipt = Receipt.objects.create(
-            made_by=profile, to_department=to_department
-        )
-        ReceiptProduct.objects.create(product=product, receipt=self.receipt, quantity=1)
+        receipt = Receipt.objects.create(made_by=profile, to_department=to_department)
+        ReceiptProduct.objects.create(product=product, receipt=receipt, quantity=1)
         with self.assertRaises(ProtectedError):
             response = self.client.delete(reverse("product-detail", args=[product.id]))
             if response.status_code != ProtectedError:
@@ -74,8 +76,10 @@ class DepartmentTests(APITestCase):
         data = {"name": "Testing Department"}
         base_url = reverse("department-list")
         role = Role.objects.create(name="Test Role")
-        role_permission = RolePermission.objects.create(
-            role=role, action=RolePermission.ADD, subject=RolePermission.DEPARTMENTS
+        RolePermission.objects.create(
+            role=role,
+            action=RolePermission.ADD,
+            subject=RolePermission.DEPARTMENTS,
         )
         profile = Profile.objects.create(
             phone_number="+12345678912", role=role, user_id="123"
@@ -106,9 +110,7 @@ class DepartmentTests(APITestCase):
         to_department = Department.objects.create(name="Testing Department")
         profile = Profile.objects.create(phone_number="+12345678912", role=role)
         profile.departments.add(to_department)
-        self.receipt = Receipt.objects.create(
-            to_department=to_department, made_by=profile
-        )
+        Receipt.objects.create(to_department=to_department, made_by=profile)
         with self.assertRaises(ProtectedError):
             response = self.client.delete(
                 reverse("department-detail", args=[to_department.id])
@@ -142,7 +144,9 @@ class RoleTests(APITestCase):
         self.client.login(**user_credentials)
         role = Role.objects.create(name="Test Role")
         role_permission = RolePermission.objects.create(
-            role=role, action=RolePermission.VIEW, subject=RolePermission.PRODUCTS
+            role=role,
+            action=RolePermission.VIEW,
+            subject=RolePermission.PRODUCTS,
         )
         response = self.client.delete(reverse("role-detail", args=[role.id]))
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
@@ -152,7 +156,11 @@ class RoleTests(APITestCase):
     def test_create_role_permission(self):
         role = Role.objects.create(name="Test Role")
         self.client.login(**user_credentials)
-        data = {"role": role.id, "action": self.action, "subject": self.subject}
+        data = {
+            "role": role.id,
+            "action": self.action,
+            "subject": self.subject,
+        }
         response = self.client.post(reverse("rolepermission-list"), data)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertTrue(
@@ -201,7 +209,7 @@ class ProfileTests(APITestCase):
     def test_delete_profile_with_receipts(self):
         self.client.login(**user_credentials)
         profile = Profile.objects.create(phone_number="+12345678912", role=self.role)
-        self.receipt = Receipt.objects.create(made_by=profile)
+        Receipt.objects.create(made_by=profile)
         with self.assertRaises(ProtectedError):
             response = self.client.delete(reverse("profile-detail", args=[profile.id]))
             if response.status_code != ProtectedError:
@@ -244,7 +252,8 @@ class ReceiptTests(APITestCase):
     def setUp(self):
         self.user = User.objects.create_user(**user_credentials)
         self.profile = Profile.objects.create(
-            phone_number="+12345678912", role=Role.objects.create(name="Test Role")
+            phone_number="+12345678912",
+            role=Role.objects.create(name="Test Role"),
         )
         self.department_one = Department.objects.create(name="Testing Department")
         self.product = Product.objects.create(
@@ -253,7 +262,10 @@ class ReceiptTests(APITestCase):
 
     def test_create_empty_receipt(self):
         self.client.login(**user_credentials)
-        data = {"made_by": self.profile.id, "to_department": self.department_one.id}
+        data = {
+            "made_by": self.profile.id,
+            "to_department": self.department_one.id,
+        }
         response = self.client.post(reverse("receipt-list"), data)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertTrue(
@@ -270,7 +282,6 @@ class ReceiptTests(APITestCase):
         response = self.client.delete(reverse("receipt-detail", args=[receipt.id]))
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(Receipt.objects.filter(id=receipt.id).exists())
-        self.assertFalse
 
     def test_create_receipt(self):
         # covsrs:
@@ -362,7 +373,7 @@ class ReceiptTests(APITestCase):
             to_department=self.department_one,
             date=two_months_ago.date(),
         )
-        response = self.client.post(
+        self.client.post(
             reverse("receiptproduct-list"),
             {
                 "receipt": receipt_incoming_one.id,
@@ -373,7 +384,7 @@ class ReceiptTests(APITestCase):
         receipt_incoming_two = Receipt.objects.create(
             made_by=self.profile, to_department=self.department_one
         )
-        response = self.client.post(
+        self.client.post(
             reverse("receiptproduct-list"),
             {
                 "receipt": receipt_incoming_two.id,
@@ -408,10 +419,11 @@ class ReceiptTests(APITestCase):
         receipt_two = Receipt.objects.create(
             made_by=self.profile, to_department=self.department_one
         )
-        # When creation/saving/etc of instance is modified in serializers/views,
-        # this is the way to work with object, so code from all three (models,serializers,views)
+        # When creation/saving/etc of instance is modified
+        # in serializers/views, this is the way to work with object,
+        # so code from all three models,serializers,views)
         # would be executed.
-        rp_one_response = self.client.post(
+        self.client.post(
             reverse("receiptproduct-list"),
             {
                 "receipt": receipt_one.id,

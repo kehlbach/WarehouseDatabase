@@ -115,7 +115,9 @@ class RequesterFilterBackend(BaseFilterBackend):
             ):
                 subject = RolePermission.INVENTORY
                 if "department" in request.query_params:
-                    if not profile.departments.filter(pk=request.query_params["department"]).exists():  # type: ignore
+                    if not profile.departments.filter(
+                        pk=request.query_params["department"]
+                    ).exists():
                         raise PermissionDenied(error)
             elif isinstance(view, (views.ReceiptViewSet, views.ReceiptProductViewSet)):
                 subject = RolePermission.RECEIPTS
@@ -127,11 +129,11 @@ class RequesterFilterBackend(BaseFilterBackend):
                         receipt = receipt_product.receipt
                     if (
                         receipt.from_department
-                        and not receipt.from_department in profile.departments.all()
-                    ) or (  # type: ignore
+                        and receipt.from_department not in profile.departments.all()
+                    ) or (
                         receipt.to_department
-                        and not receipt.to_department in profile.departments.all()
-                    ):  # type: ignore
+                        and receipt.to_department not in profile.departments.all()
+                    ):
                         raise PermissionDenied(error)
             elif isinstance(view, views.CategoryViewSet):
                 subject = RolePermission.CATEGORIES
@@ -151,5 +153,4 @@ class RequesterFilterBackend(BaseFilterBackend):
                 ).first()
             if not permission:
                 raise PermissionDenied(error)
-                # return Response({'error': error['detail']}, status=status.HTTP_403_FORBIDDEN)
         return queryset

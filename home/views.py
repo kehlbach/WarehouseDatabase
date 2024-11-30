@@ -66,10 +66,11 @@ class DepartmentViewSet(viewsets.ModelViewSet):
         )
 
 
-class RolePermissionViewSet(CustomViewSet):
+class RolePermissionViewSet(viewsets.ModelViewSet):
     queryset = RolePermission.objects.all().order_by("id")
     serializer_class = RolePermissionSerializer
     permission_classes = [permissions.IsAuthenticated]
+    filter_backends = [DjangoFilterBackend, RequesterFilterBackend]
     filterset_fields = ["role", "action", "subject"]
 
 
@@ -83,31 +84,35 @@ class SubjectsView(APIView):
         return Response(dict(RolePermission.Subjects))
 
 
-class RoleViewSet(CustomViewSet):
+class RoleViewSet(viewsets.ModelViewSet):
     queryset = Role.objects.all().order_by("id")
     serializer_class = RoleSerializer
     permission_classes = [permissions.IsAuthenticated]
+    filter_backends = [DjangoFilterBackend, RequesterFilterBackend]
     filterset_fields = ["name"]
 
 
-class ProfileViewSet(CustomViewSet):
+class ProfileViewSet(viewsets.ModelViewSet):
     queryset = Profile.objects.all().order_by("id")
     serializer_class = ProfileSerializer
     permission_classes = [permissions.IsAuthenticated]
+    filter_backends = [DjangoFilterBackend, RequesterFilterBackend]
     filterset_fields = ["phone_number", "role", "user_id"]
 
 
-class CategoryViewSet(CustomViewSet):
+class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all().order_by("id")
     serializer_class = CategorySerializer
     permission_classes = [permissions.IsAuthenticated]
+    filter_backends = [DjangoFilterBackend, RequesterFilterBackend]
     filterset_fields = ["name"]
 
 
-class ProductViewSet(CustomViewSet):
+class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.all().order_by("name").order_by("category__name")
     serializer_class = ProductSerializer
     permission_classes = [permissions.IsAuthenticated]
+    filter_backends = [DjangoFilterBackend, RequesterFilterBackend]
     filterset_fields = ["vendor_code", "name", "category"]
 
 
@@ -115,6 +120,7 @@ class ReceiptViewSet(viewsets.ModelViewSet):
     queryset = Receipt.objects.all().order_by("-id")
     serializer_class = ReceiptSerializer
     permission_classes = [permissions.IsAuthenticated]
+    filter_backends = [DjangoFilterBackend, RequesterFilterBackend]
     filter_backends = [
         RequesterFilterBackend,
         DjangoFilterBackend,
@@ -123,19 +129,21 @@ class ReceiptViewSet(viewsets.ModelViewSet):
     filterset_fields = ["date", "from_department", "to_department", "made_by"]
 
 
-class ReceiptProductViewSet(CustomViewSet):
+class ReceiptProductViewSet(viewsets.ModelViewSet):
     queryset = ReceiptProduct.objects.all().order_by("id")
     serializer_class = ReceiptProductSerializer
     permission_classes = [permissions.IsAuthenticated]
+    filter_backends = [DjangoFilterBackend, RequesterFilterBackend]
     filterset_fields = ["receipt", "product"]
 
-    def destroy(self, request, pk=None):
+    def destroy(self, request, *args, **kwargs):
         rp = self.get_object()
         try:
             if rp.receipt.from_department:
                 latest_inventory = (
                     Inventory.objects.filter(
-                        department=rp.receipt.from_department, product=rp.product
+                        department=rp.receipt.from_department,
+                        product=rp.product,
                     )
                     .order_by("-year", "-month")
                     .first()
@@ -177,16 +185,15 @@ class ReceiptProductViewSet(CustomViewSet):
         except ValidationError as e:
             print(e)
             return Response({"error": e}, status=status.HTTP_400_BAD_REQUEST)
-        except Exception as e:
-            print(e)
         rp.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class InventoryViewSet(CustomViewSet):
+class InventoryViewSet(viewsets.ModelViewSet):
     queryset = Inventory.objects.all().order_by("-year", "-month")
     serializer_class = InventorySerializer
     permission_classes = [permissions.IsAuthenticated]
+    filter_backends = [DjangoFilterBackend, RequesterFilterBackend]
     filterset_fields = ["department", "year", "month", "product"]
 
 
@@ -200,16 +207,21 @@ class InventorySummaryViewSet(viewsets.ReadOnlyModelViewSet):
         """
         Retrieves the queryset for the view, which is filtered by the date
         parameter if provided.
+
+        If the date is provided, then the queryset is filtered by the date
+        and the records with the latest month and year are returned. If no
+        records are found with the exact date, then the queryset is filtered
+        by closest previous month in the given year.
+
+        If the date is not provided, then the latest inventory records are
+        returned.
+
+        If no records are found with given year,
+        then the queryset is filtered by closest month in closest previous year
         """
         # note: may require optimization of queries if performance is an issue
         date_str = self.request.query_params.get("date", None)  # type: ignore
         if date_str:
-            """
-            If the date is provided, then the queryset is filtered by the date
-            and the records with the latest month and year are returned. If no
-            records are found with the exact date, then the queryset is filtered
-            by closest previous month in the given year.
-            """
             date = datetime.strptime(date_str, "%Y-%m-%d").date()
             year, month = date.year, date.month
             grouped_records = (
@@ -233,10 +245,6 @@ class InventorySummaryViewSet(viewsets.ReadOnlyModelViewSet):
                     id__in=Subquery(grouped_records.values("latest_id"))
                 ).order_by("department", "product")
             else:
-                """
-                If no records are found with given year,
-                then the queryset is filtered by closest month in closest previous year
-                """
                 grouped_records = (
                     Inventory.objects.filter(year__lt=year)
                     .values("department", "product")
@@ -257,22 +265,16 @@ class InventorySummaryViewSet(viewsets.ReadOnlyModelViewSet):
                         id__in=Subquery(grouped_records.values("latest_id"))
                     ).order_by("department", "product")
                 else:
-                    """
-                    If no records are found, then an empty queryset is
-                    returned.
-                    """
                     latest_records = Inventory.objects.none()
             return latest_records
         else:
-            """
-            If the date is not provided, then the latest inventory records are returned.
-            """
             grouped_records = Inventory.objects.values(
                 "department", "product"
             ).annotate(
                 latest_id=Subquery(
                     Inventory.objects.filter(
-                        department=OuterRef("department"), product=OuterRef("product")
+                        department=OuterRef("department"),
+                        product=OuterRef("product"),
                     )
                     .order_by("-year", "-month")
                     .values("id")[:1]
