@@ -4,7 +4,6 @@
 .env
 __pycache__/
 .envpa
-migrations/
 sql.txt
 db1.cnf
 home/fixtures/admin.json
