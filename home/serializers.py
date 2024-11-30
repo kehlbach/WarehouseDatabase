@@ -222,18 +222,13 @@ class ReceiptProductSerializer(serializers.ModelSerializer):
                 if obj and obj != rp:
                     exists -= obj.quantity
             if issued > exists:
-                print(rp.product)
-                _product_name = rp.product.name
+                _product_name = rp.product.repr
                 department_name = rp.receipt.from_department.repr
                 text = "Not enough {} on department {}".format(
                     _product_name, department_name
                 )
                 rp.delete()
-                raise ValidationError(
-                    "Not enough {} on department {}".format(
-                        rp.product.repr, rp.receipt.from_department.repr
-                    )
-                )
+                raise ValidationError(text)
             if created:
                 inventory.goods_issued = rp.quantity
             else:

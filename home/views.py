@@ -106,7 +106,6 @@ class ReceiptProductViewSet(CustomViewSet):
     filterset_fields = ["receipt", "product"]
 
     def destroy(self, request, pk=None):
-        print("ReceiptProduct destroy!!")
         rp = self.get_object()
         try:
             if rp.receipt.from_department:
