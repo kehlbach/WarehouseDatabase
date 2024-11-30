@@ -22,7 +22,7 @@ python -m pip install -r requirements.txt
 
 By default this database is set to work with MySQL Server. Database should be created beforehand, Django won't create database.
 
-In directory with manage.py create files .env and db1.cnf.
+In directory with manage.py create files .env and db.cnf.
 
 .env contains:
 
@@ -34,7 +34,7 @@ SQLITE=[True or False]
 
 You can set SQLITE to True if you want to use SQLite Database for testing purposes.
 
-db1.cnf contains (for local MySQL Database):
+db.cnf contains (for local MySQL Database):
 
 ```
 [client]
