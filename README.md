@@ -4,12 +4,14 @@
 
 This is Django REST API Database service for warehouse accounting.
 
+This project is designed to work with [WarehouseBot](https://github.com/kehlbach/WarehouseBot).
+
 ## Running Locally
 
 First clone and setup the virtual environment
 
 ```cmd
-git clone https://github.com/valentinkelbakh/WarehouseDatabase.git
+git clone https://github.com/kehlbach/WarehouseDatabase.git
 cd WarehouseDatabase
 python -m venv .venv
 .venv\Scripts\activate.bat
@@ -45,8 +47,6 @@ port=3306
 Migrate all models to database:
 
 ```
-python manage.py makemigrations
-python manage.py makemigrations home
 python manage.py migrate
 ```
 
@@ -62,6 +62,12 @@ To run an app:
 
 ```
 python manage.py runserver
+```
+
+To run tests:
+
+```
+python manage.py test
 ```
 
 ## Database Schema
