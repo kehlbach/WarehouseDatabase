@@ -1,6 +1,8 @@
 # WarehouseDatabase
+[![Django CI](https://github.com/kehlbach/WarehouseDatabase/actions/workflows/django.yml/badge.svg)](https://github.com/kehlbach/WarehouseDatabase/actions/workflows/django.yml)
 
 ![Python 3.10](https://img.shields.io/badge/python-3.10-blue.svg)
+![Django 4.1.10](https://img.shields.io/badge/django-4.1.10-blue.svg)
 
 This is Django REST API Database service for warehouse accounting.
 
@@ -72,4 +74,4 @@ python manage.py test
 
 ## Database Schema
 
-![db_schema](https://github.com/valentinkelbakh/WarehouseDatabase/assets/114210745/87deaec4-4324-443e-8791-63b8a749ad92)
+![db_schema](https://github.com/user-attachments/assets/160bfc62-1626-4ad9-8c86-6720577abafb)
