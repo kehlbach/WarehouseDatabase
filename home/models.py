@@ -1,14 +1,13 @@
-from django.core.validators import RegexValidator
-from django.db import models
 from datetime import date
+from decimal import Decimal
+
 import phonenumbers
+from django.db import models
 
 
 class Department(models.Model):
     name = models.CharField(max_length=32, unique=True)
-    # charfield and textfield not require null=True
     location = models.CharField(max_length=128, blank=True)
-    is_hidden = models.BooleanField(default=False)
 
     def __str__(self):
         return f"{self.name.capitalize()}"
@@ -22,12 +21,6 @@ class Department(models.Model):
         from_d = len(Receipt.objects.filter(from_department=self.id))  # type: ignore
         to_d = len(Receipt.objects.filter(to_department=self.id))  # type: ignore
         return from_d + to_d
-
-    def save(self, *args, **kwargs):
-        if self.location == "Skip":
-            self.location = ""
-
-        super().save(*args, **kwargs)
 
 
 class Role(models.Model):
@@ -101,23 +94,18 @@ class Profile(models.Model):
     user_id = models.CharField(max_length=32, unique=True, null=True, blank=True)
     role = models.ForeignKey(Role, on_delete=models.PROTECT)
     departments = models.ManyToManyField(Department, blank=True)
-    is_hidden = models.BooleanField(default=False)
 
     def __str__(self):
-
-        return f"{self.name}: {self.role}"
+        if self.name:
+            group = self.name.split(" ")
+            # overengineered way of returning "John D.: Manager"
+            return f'{group.pop(0)} {"".join(obj[0]+"." for obj in group)}: {self.role}'
+        else:
+            return f"{self.phone_number}: {self.role}"
 
     @property
     def repr(self):
-        if self.name:
-            group = self.name.split()
-            name = group.pop(0)
-            if group:
-                for each in group:
-                    name += " {}.".format(each[0])
-            return name
-        else:
-            return self.phone_number
+        return self.__str__()
 
     def save(self, *args, **kwargs):
         if self.phone_number:
@@ -129,7 +117,7 @@ class Profile(models.Model):
 
 
 class Category(models.Model):
-    name = models.CharField(max_length=128)
+    name = models.CharField(max_length=64, unique=True)
 
     def __str__(self):
         return f"{self.name}"
@@ -142,32 +130,21 @@ class Category(models.Model):
 class Product(models.Model):
     vendor_code = models.CharField(max_length=32, blank=True)
     name = models.CharField(max_length=128)
-    units = models.CharField(max_length=32, default="шт")
-    category = models.ForeignKey(
-        Category, on_delete=models.PROTECT, blank=True, null=True
-    )
+    units = models.CharField(max_length=32, default="pcs")
+    category = models.ForeignKey(Category, on_delete=models.PROTECT)
 
     class Meta:
         unique_together = ("name", "category")
 
     def __str__(self):
-        vendor_code = f"{self.vendor_code}:" if self.vendor_code else ""
-        category = f"{self.category.repr}: " if self.category else ""
-        return vendor_code + category + self.name
+        return f"{self.vendor_code}:{self.category}: {self.name}"
 
     @property
     def repr(self):
         return self.__str__()
 
-    def save(self, *args, **kwargs):
-        if self.vendor_code == "Пропустить":
-            self.vendor_code = ""
-        super().save(*args, **kwargs)
-
 
 class Receipt(models.Model):
-    # date = models.DateField()
-    # date now:
     date = models.DateField(default=date.today)  # auto_now_add=True)
     time = models.TimeField(auto_now_add=True)
     from_department = models.ForeignKey(
@@ -188,7 +165,6 @@ class Receipt(models.Model):
     note = models.CharField(max_length=256, blank=True)
 
     def __str__(self):
-        # type: ignore
         return "{}: {} {} {}".format(
             self.id,  # type: ignore
             self.type,
@@ -211,15 +187,17 @@ class Receipt(models.Model):
 
 
 class ReceiptProduct(models.Model):
-    # Удаление Receipt рассматривается как отмена операции по накладной
-    # Товары накладной должны быть удалены отдельно
-    # Можно удалить только последнюю накладную
+    # Main idea:
+    # Deletion of receipt is considered as cancellation of operation by receipt
+    # Receipt products should be deleted separately
+    # Only the (currently) latest receipt can be deleted
     receipt = models.ForeignKey(Receipt, on_delete=models.PROTECT)
     product = models.ForeignKey(Product, on_delete=models.PROTECT)
-    price = models.DecimalField(max_digits=10, decimal_places=2, default=0)  # type: ignore
+    price = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal(0))
     quantity = models.IntegerField()
 
     class Meta:
+        # considering we can have one product added several times with different prices
         unique_together = ("receipt", "product", "price")
 
 
@@ -237,18 +215,18 @@ class Inventory(models.Model):
     NOV = 11
     DEC = 12
     Months = (
-        (JAN, "Январь"),
-        (FEB, "Февраль"),
-        (MAR, "Март"),
-        (APR, "Апрель"),
-        (MAY, "Май"),
-        (JUN, "Июнь"),
-        (JUL, "Июль"),
-        (AUG, "Август"),
-        (SEP, "Сентябрь"),
-        (OCT, "Октябрь"),
-        (NOV, "Ноябрь"),
-        (DEC, "Декабрь"),
+        (JAN, "January"),
+        (FEB, "February"),
+        (MAR, "March"),
+        (APR, "April"),
+        (MAY, "May"),
+        (JUN, "June"),
+        (JUL, "July"),
+        (AUG, "August"),
+        (SEP, "September"),
+        (OCT, "October"),
+        (NOV, "November"),
+        (DEC, "December"),
     )
     department = models.ForeignKey(Department, on_delete=models.CASCADE)
     year = models.IntegerField()
