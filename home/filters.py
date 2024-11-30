@@ -1,7 +1,9 @@
-from rest_framework.filters import BaseFilterBackend
-from rest_framework.exceptions import PermissionDenied
 from django.urls import resolve
-from .models import *
+from rest_framework.exceptions import PermissionDenied
+from rest_framework.filters import BaseFilterBackend
+
+from home.models import Profile, Receipt, ReceiptProduct, RolePermission
+
 from . import views
 
 

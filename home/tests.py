@@ -1,20 +1,21 @@
 from datetime import datetime, timedelta
-from django.contrib.auth.models import User
-from django.core.exceptions import ValidationError
+
+import phonenumbers
+from django.contrib.auth import get_user_model
 from django.db.models.deletion import ProtectedError
 from django.urls import reverse
-import phonenumbers
 from rest_framework import status
 from rest_framework.test import APITestCase
+
 from home.models import (
     Category,
+    Department,
+    Inventory,
     Product,
+    Profile,
     Receipt,
     ReceiptProduct,
-    Inventory,
-    Department,
     Role,
-    Profile,
     RolePermission,
 )
 
